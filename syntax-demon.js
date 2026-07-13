@@ -141,7 +141,7 @@
       { type: 'builtin', regex: /\b(?:print|len|range|str|int|float|bool|list|dict|set|tuple|type|isinstance|super|self|enumerate|zip|map|filter|sorted|reversed|open|input|format|repr|iter|next|abs|min|max|sum|any|all|Exception|ValueError|TypeError|KeyError|IndexError|StopIteration)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?[jJ]?\b/g },
       { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
-      { type: 'operator', regex: /[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|->|:=/g },
+      { type: 'operator', regex: /<<=|>>=|<<|>>|[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|[*/&|^]=?|~|->|:=/g },
       { type: 'punctuation', regex: /[{}[\]();,:.]/g }
     ],
 

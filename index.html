@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<title>Syntax Demon</title>
+<meta name=viewport content="initial-scale=1,width=device-width">
+<link rel=stylesheet href=syntax-demon.css>
+<style>
+	body {
+		color: #1a1a1a;
+		font-family: ui-sans-serif, system-ui, sans-serif;
+		line-height: 1.5;
+		margin: ;
+		padding: 2rem;
+		background: #f8f9fa;
+	}
+
+	h1 {
+		font-size: 1.75rem;
+		margin-bottom: .5rem;
+	}
+
+	h2 {
+		font-size: 1.25rem;
+		margin-top: 2rem;
+		margin-bottom: .5rem;
+	}
+
+	p {
+		margin-bottom: 1.5rem;
+	}
+
+	a {
+		color: #0066cc;
+	}
+
+	code {
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+		font-size: .875rem;
+	}
+
+	pre {
+		background: #f5f5f7;
+		border-radius: 6px;
+		color: #1e1e2e;
+		line-height: 1.5;
+		overflow-x: auto;
+		padding: 1.25rem;
+	}
+
+	pre code {
+		display: block;
+		font-size: .875rem;
+	}
+
+	@media (prefers-color-scheme: dark) {
+
+		body {
+			color: #cdd6f4;
+			background-color: #1e1e2e;
+		}
+
+		pre {
+			background: #1e1e2e;
+			color: #cdd6f4;
+		}
+
+		a {
+			color: #89b4fa;
+		}
+
+	}
+</style>
+<h1>Syntax Demon</h1>
+<p>Code highlighting via the <a href="https://drafts.csswg.org/css-highlight-api-1/">CSS Custom Highlight API</a>. No <code>&lt;span&gt;</code> elements.</p>
+
+<h2>HTML</h2>
+<pre><code class=language-html>&lt;!DOCTYPE html&gt;
+&lt;html lang=en&gt;
+&lt;head&gt;
+	&lt;meta charset=UTF-8&gt;
+	&lt;title&gt;My Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+	&lt;h1&gt;Hello, World!&lt;/h1&gt;
+	&lt;p class=intro&gt;Welcome.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<h2>CSS</h2>
+<pre><code class=language-css>/* Reset */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: ;
+	padding: ;
+}
+
+body {
+	font-family: system-ui, sans-serif;
+	line-height: 1.6;
+	color: #1a1a1a;
+	background-color: #ffffff;
+}
+
+.container {
+	max-width: 800px;
+	margin:  auto;
+	padding: 2rem;
+}</code></pre>
+<h2>JavaScript</h2>
+<pre><code class=language-js>// Fetch and display user data
+async function fetchUser(id) {
+	try {
+		const response = await fetch(`/api/users/${id}`);
+
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}`);
+		}
+
+		const user = await response.json();
+		console.log(`User: ${user.name}`);
+		return user;
+	} catch (err) {
+		console.error("Failed to fetch user:", err.message);
+		return null;
+	}
+}
+
+const app = {
+	name: "My App",
+	version: "1.0.0",
+	init() {
+		console.log(`${this.name} v${this.version} initialized`);
+	}
+};
+
+export default app;</code></pre>
+<h2>TypeScript</h2>
+<pre><code class=language-ts>interface User {
+	id: number;
+	name: string;
+	email: string;
+	role: "admin" | "user" | "guest";
+}
+
+async function getUsers&lt;T extends User&gt;(
+	limit: number = 10
+): Promise&lt;T[]&gt; {
+	const res = await fetch(`/api/users?limit=${limit}`);
+	const json = await res.json();
+	return json.data as T[];
+}
+
+export { getUsers };
+export type { User };</code></pre>
+<h2>Shell</h2>
+<pre><code class=language-shell># Install dependencies
+npm install
+
+# Run development server
+npm run dev -- --port 3000
+
+# Build for production
+NODE_ENV=production npm run build
+
+# Deploy to server
+ssh deploy@server.example.com "cd /var/www && git pull && pm2 restart app"</code></pre>
+<h2>Inline code</h2>
+<p>Use <code class=language-js>console.log("hello")</code> for debugging, or <code class=language-shell>npm install</code> to install.</p>
+<script src=syntax-demon.js></script>

@@ -1,0 +1,120 @@
+/* Syntax Demon: Token Styles */
+
+:root {
+	--sd-keyword: #7c3aed;
+	--sd-string: #16a34a;
+	--sd-comment: #6b7280;
+	--sd-number: #ea580c;
+	--sd-function: #2563eb;
+	--sd-operator: #0891b2;
+	--sd-tag: #dc2626;
+	--sd-attribute: #d97706;
+	--sd-punctuation: #6b7280;
+	--sd-property: #2563eb;
+	--sd-selector: #dc2626;
+	--sd-builtin: #db2777;
+	--sd-doctype: #6b7280;
+	--sd-entity: #ea580c;
+	--sd-variable: #1f2937;
+	--sd-flag: #16a34a;
+	--sd-path: #d97706;
+	--sd-command: #2563eb;
+}
+
+@media (prefers-color-scheme: dark) {
+
+	:root {
+		--sd-keyword: #cba6f7;
+		--sd-string: #a6e3a1;
+		--sd-comment: #7f849c;
+		--sd-number: #fab387;
+		--sd-function: #89b4fa;
+		--sd-operator: #89dceb;
+		--sd-tag: #f38ba8;
+		--sd-attribute: #f9e2af;
+		--sd-punctuation: #9399b2;
+		--sd-property: #89b4fa;
+		--sd-selector: #f38ba8;
+		--sd-builtin: #f5c2e7;
+		--sd-doctype: #7f849c;
+		--sd-entity: #fab387;
+		--sd-variable: #cdd6f4;
+		--sd-flag: #a6e3a1;
+		--sd-path: #f9e2af;
+		--sd-command: #89b4fa;
+	}
+
+}
+
+::highlight(keyword) {
+	color: var(--sd-keyword);
+}
+
+::highlight(string) {
+	color: var(--sd-string);
+}
+
+::highlight(comment) {
+	color: var(--sd-comment);
+	font-style: italic;
+}
+
+::highlight(number) {
+	color: var(--sd-number);
+}
+
+::highlight(function) {
+	color: var(--sd-function);
+}
+
+::highlight(operator) {
+	color: var(--sd-operator);
+}
+
+::highlight(tag) {
+	color: var(--sd-tag);
+}
+
+::highlight(attribute) {
+	color: var(--sd-attribute);
+}
+
+::highlight(punctuation) {
+	color: var(--sd-punctuation);
+}
+
+::highlight(property) {
+	color: var(--sd-property);
+}
+
+::highlight(selector) {
+	color: var(--sd-selector);
+}
+
+::highlight(builtin) {
+	color: var(--sd-builtin);
+}
+
+::highlight(doctype) {
+	color: var(--sd-doctype);
+}
+
+::highlight(entity) {
+	color: var(--sd-entity);
+}
+
+::highlight(variable) {
+	color: var(--sd-variable);
+}
+
+::highlight(flag) {
+	color: var(--sd-flag);
+}
+
+::highlight(path) {
+	color: var(--sd-path);
+}
+
+::highlight(command) {
+	color: var(--sd-command);
+}

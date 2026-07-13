@@ -73,8 +73,8 @@
       { type: 'string', regex: /`[^`]+`/g },
       { type: 'attribute', regex: /\*\*[^*]+\*\*|__[^_]+__/g },
       { type: 'entity', regex: /(?<!\*)\*[^*\n]+\*(?!\*)|(?<!_)_[^_\n]+_(?!_)/g },
-      { type: 'property', regex: /(?<=\[)[^\]]*(?=\])/g },
-      { type: 'path', regex: /(?<=\()[^)]*(?=\))/g },
+      { type: 'property', regex: /(?<=\[)[^\]]+(?=\])/g },
+      { type: 'path', regex: /(?<=\()[^)]+(?=\))/g },
       { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^\s*[-*+](?=\s)|^\s*\d+\.(?=\s)|[[\]()]/gm }
     ],
 
@@ -118,7 +118,7 @@
 
     python: [
       { type: 'comment', regex: /#.*$/gm },
-      { type: 'string', regex: /("""[\s\S]*?"""|'''[\s\S]*?''')|[a-zA-Z]?"(?:[^"\\]|\\.)*"|[a-zA-Z]?'(?:[^'\\]|\\.)*'/g },
+      { type: 'string', regex: /(?:[rRbBfFuU]{1,2})?("""[\s\S]*?"""|'''[\s\S]*?''')|(?:[rRbBfFuU]{1,2})?"(?:[^"\\]|\\.)*"|(?:[rRbBfFuU]{1,2})?'(?:[^'\\]|\\.)*'/g },
       { type: 'keyword', regex: /^\s*@[a-zA-Z_][a-zA-Z0-9_.]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/gm },
       { type: 'builtin', regex: /\b(?:print|len|range|str|int|float|bool|list|dict|set|tuple|type|isinstance|super|self|enumerate|zip|map|filter|sorted|reversed|open|input|format|repr|iter|next|abs|min|max|sum|any|all|Exception|ValueError|TypeError|KeyError|IndexError|StopIteration)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?[jJ]?\b/g },

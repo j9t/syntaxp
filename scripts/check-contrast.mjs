@@ -24,7 +24,7 @@ function extractPalette(block) {
 
 function hexToRgb(hex) {
   let h = hex.slice(1);
-  if (h.length === 3) {
+  if (h.length === 3 || h.length === 4) {
     h = [...h].map((c) => c + c).join('');
   }
   const num = parseInt(h.slice(0, 6), 16);

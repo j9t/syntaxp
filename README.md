@@ -4,28 +4,28 @@ Code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/cs
 
 ## How it works
 
-1. Finds all `<code>` elements with a `class="language-*"` attribute
+1. Finds all `<code>` elements with a `class=language-*` attribute
 2. Tokenizes the text content using regex-based per-language tokenizers
 3. Creates `StaticRange` objects for each token
 4. Registers them as `Highlight` objects in `CSS.highlights`
 5. Styles them via `::highlight()` CSS rules
 
-The text node stays clean — no DOM manipulation, no wrapper elements.
+The text node stays clean—no DOM manipulation, no wrapper elements.
 
 ## Usage
 
 Include the CSS and JS on your page:
 
 ```html
-<link rel="stylesheet" href="syntax-demon.css">
-<script src="syntax-demon.js"></script>
+<link rel=stylesheet href=syntax-demon.css>
+<script src=syntax-demon.js></script>
 ```
 
 Then write normal code blocks:
 
 ```html
-<pre><code class="language-js">
-const greeting = "Hello, World!";
+<pre><code class=language-js>
+const greeting = 'Hello';
 console.log(greeting);
 </code></pre>
 ```
@@ -33,35 +33,31 @@ console.log(greeting);
 Inline code works too:
 
 ```html
-<p>Run <code class="language-shell">npm install</code> to get started.</p>
+<p>Run <code class=language-shell>npm install</code> to get started.</p>
 ```
 
-The JS auto-discovers all `<code class="language-*">` elements on `DOMContentLoaded`.
+The JS auto-discovers all `<code class=language-*>` elements on `DOMContentLoaded`.
 
 ## Supported languages
 
-- `language-html`
-- `language-css`
-- `language-js`
-- `language-ts`
-- `language-shell`
+* `language-html`
+* `language-css`
+* `language-js`
+* `language-ts`
+* `language-shell`
+
+(Contributions are welcome to extend this—please send a PR!)
 
 ## Browser support
 
-Requires the CSS Custom Highlight API:
-
-| Browser | Version |
-|---------|---------|
-| Chrome  | 105+    |
-| Firefox | 140+    |
-| Safari  | 17.2+   |
+Requires support for [the CSS Custom Highlight API](https://caniuse.com/wf-highlight).
 
 Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 
 ## Token types
 
 | Type | Example |
-|------|---------|
+| --- | --- |
 | `keyword` | `const`, `function`, `@media` |
 | `string` | `"hello"`, `'world'` |
 | `comment` | `// comment`, `/* block */`, `# shell comment` |

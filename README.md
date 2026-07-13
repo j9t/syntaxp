@@ -135,9 +135,9 @@ If you override the default colors or background, you’re responsible for re-ch
 
 `syntax-demon.css` and `syntax-demon.js` are the source of truth and have no build step of their own—the tooling below only produces version-stamped release files in `dist/`, and is a dev-time dependency only. Run `npm install` once to fetch it and set up a pre-commit hook that runs the contrast check whenever `syntax-demon.css` is staged.
 
-* `npm run check-contrast`—check every token color against its palette’s `--sd-background` (also runs automatically before each commit that touches `syntax-demon.css`)
-* `npm run build`—produce `dist/syntax-demon.js` and `dist/syntax-demon.min.js`, each with `syntax-demon.css`’s content embedded (unminified and minified, respectively), plus a `.hash` file next to each containing its `style-src` hash-source (see [note on Content Security Policies](#content-security-policies))
-* `npm test`—run the test suite (`node --test`)
+* `npm run check-contrast`: Check every token color against its palette’s `--sd-background` (also runs automatically before each commit that touches `syntax-demon.css`)
+* `npm run build`: Produce `dist/syntax-demon.js` and `dist/syntax-demon.min.js`, each with `syntax-demon.css`’s content embedded (unminified and minified, respectively), plus a `.hash` file next to each containing its `style-src` hash-source (see [note on Content Security Policies](#content-security-policies))
+* `npm test`: Run the test suite
 
 ### Releases
 

@@ -131,9 +131,9 @@ test('`py` is an alias for `python`', () => {
 test('`python` standalone multiplication/division, bitwise, unary tilde, and shift operators', () => {
   const tokens = tokenize(
     'language-python',
-    'a * b / c & d | e ^ f\nn = ~x\na <<= 1\na >>= 1\na &= 1\na |= 1\na ^= 1\na *= 1\na /= 1'
+    'a * b / c & d | e ^ f\nn = ~x\na << b\na >> b\na <<= 1\na >>= 1\na &= 1\na |= 1\na ^= 1\na *= 1\na /= 1'
   );
-  for (const op of ['*', '/', '&', '|', '^', '~', '<<=', '>>=', '&=', '|=', '^=', '*=', '/=']) {
+  for (const op of ['*', '/', '&', '|', '^', '~', '<<', '>>', '<<=', '>>=', '&=', '|=', '^=', '*=', '/=']) {
     assertHasToken(tokens, 'operator', op);
   }
   // Existing compound/comparison operators must still match as before

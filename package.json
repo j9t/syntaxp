@@ -11,5 +11,5 @@
     "check-contrast": "node scripts/check-contrast.mjs",
     "prepare": "node scripts/install-hooks.mjs"
   },
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

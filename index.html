@@ -71,7 +71,7 @@
 </style>
 <h1>Syntax Demon</h1>
 <p>Code highlighting via the <a href="https://drafts.csswg.org/css-highlight-api-1/">CSS Custom Highlight API</a>. No <code>&lt;span&gt;</code> elements.
-<h2>HTML</h2>
+<h2>HTML (and XML)</h2>
 <pre><code class=language-html>&lt;!DOCTYPE html&gt;
 &lt;html lang=en&gt;
 &lt;head&gt;
@@ -151,7 +151,7 @@ async function getUsers&lt;T extends User&gt;(
 
 export { getUsers };
 export type { User };</code></pre>
-<h2>Shell</h2>
+<h2>Shell (and Bash)</h2>
 <pre><code class=language-shell># Install dependencies
 npm install
 
@@ -163,7 +163,84 @@ NODE_ENV=production npm run build
 
 # Deploy to server
 ssh deploy@server.example.com "cd /var/www && git pull && pm2 restart app"</code></pre>
+<h2>Markdown</h2>
+<pre><code class=language-markdown># Getting Started
+
+Install the package with `npm install syntax-demon`, then read the **usage**
+guide or check the _API reference_.
+
+> Requires support for the CSS Custom Highlight API.
+
+* Zero dependencies
+* No `&lt;span&gt;` elements
+* [Read the docs](https://github.com/j9t/syntax-demon)</code></pre>
+<h2>JSON</h2>
+<pre><code class=language-json>{
+	"name": "My App",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"build": "node scripts/build.mjs",
+		"test": "node --test"
+	},
+	"dependencies": {
+		"esbuild": "^0.28.1"
+	},
+	"strict": true,
+	"legacy": false,
+	"proxy": null
+}</code></pre>
+<h2>YAML</h2>
+<pre><code class=language-yaml># Deployment config
+name: My App
+version: 1.0.0
+private: true
+env:
+  - NODE_ENV=production
+  - PORT=3000
+build:
+  command: "npm run build"
+  output: dist/
+retries: 3</code></pre>
+<h2>SQL</h2>
+<pre><code class=language-sql>SELECT customers.name, COUNT(orders.id) AS order_count
+FROM customers
+INNER JOIN orders ON orders.customer_id = customers.id
+WHERE orders.created_at &gt;= '2026-01-01'
+GROUP BY customers.name
+ORDER BY order_count DESC
+LIMIT 10;</code></pre>
+<h2>Python</h2>
+<pre><code class=language-python># Fetch and display user data
+import json
+from urllib.request import urlopen
+
+class UserError(Exception):
+	pass
+
+def fetch_user(user_id: int) -> dict:
+	with urlopen(f"/api/users/{user_id}") as response:
+		if response.status != 200:
+			raise UserError(f"HTTP {response.status}")
+		return json.load(response)
+
+@staticmethod
+def main():
+	user = fetch_user(42)
+	print(f"User: {user['name']}")
+
+if __name__ == "__main__":
+	main()</code></pre>
+<h2>Diff</h2>
+<pre><code class=language-diff>diff --git a/syntax-demon.js b/syntax-demon.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/syntax-demon.js
++++ b/syntax-demon.js
+@@ -14,6 +14,7 @@ const languages = {
+   html: [ … ],
+   css: [ … ],
++  json: [ … ],
+   js: [ … ]
+ };</code></pre>
 <h2>Inline code</h2>
-<blockquote>
-	<p>Use <code class=language-js>console.log("hello")</code> for debugging, or <code class=language-shell>npm install</code> to install.
-</blockquote>
+<p>“Use <code class=language-js>console.log("hello")</code> for debugging”, “enter <code class=language-shell>npm install</code> to install.”

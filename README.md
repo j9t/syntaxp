@@ -2,7 +2,7 @@
 
 Code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/css-highlight-api-1/). Zero dependencies. No `<span>` elements in the DOM.
 
-## How it works
+## How It Works
 
 1. Finds all `<code>` elements with a `class=language-*` attribute
 2. Tokenizes the text content using regex-based per-language tokenizers
@@ -38,7 +38,7 @@ Inline code works too:
 
 The JS auto-discovers all `<code class=language-*>` elements on `DOMContentLoaded`.
 
-## Supported languages
+## Supported Languages
 
 * `language-html`
 * `language-css`
@@ -48,13 +48,13 @@ The JS auto-discovers all `<code class=language-*>` elements on `DOMContentLoade
 
 (Contributions are welcome to extend this—please send a PR!)
 
-## Browser support
+## Browser Support
 
 Requires support for [the CSS Custom Highlight API](https://caniuse.com/wf-highlight).
 
 Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 
-## Token types
+## Token Types
 
 | Type | Example |
 | --- | --- |
@@ -74,7 +74,7 @@ Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 | `flag` | `--port`, `-v` |
 | `path` | `./src/index.js` |
 
-## Customizing colors
+## Customizing Colors
 
 Override the CSS custom properties:
 

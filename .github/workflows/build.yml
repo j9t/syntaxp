@@ -31,3 +31,5 @@ jobs:
         run: npm run check-contrast
       - name: "Build"
         run: npm run build
+      - name: "Test"
+        run: npm test

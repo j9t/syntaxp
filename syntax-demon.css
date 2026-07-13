@@ -56,7 +56,6 @@
 
 ::highlight(comment) {
 	color: var(--sd-comment);
-	font-style: italic;
 }
 
 ::highlight(number) {

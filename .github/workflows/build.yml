@@ -5,6 +5,10 @@ on:
     branches: main
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -14,6 +18,8 @@ jobs:
     steps:
       - name: "Check out repository"
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: "Set up Node"
         uses: actions/setup-node@v5
         with:

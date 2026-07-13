@@ -61,7 +61,7 @@
       { type: 'comment', regex: /#.*$/gm },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
       { type: 'variable', regex: /\$[{(]?[a-zA-Z_][a-zA-Z0-9_]*[})]?/g },
-      { type: 'flag', regex: /\s--?[a-zA-Z-]+/g },
+      { type: 'flag', regex: /(?<=^|\s)--?[a-zA-Z-]+/g },
       { type: 'path', regex: /(?:\.{0,2}\/)[^\s;|&<>"]+/g },
       { type: 'command', regex: /^(?:sudo|cd|ls|cat|grep|find|mkdir|rm|cp|mv|chmod|chown|ssh|scp|rsync|npm|npx|node|git|docker|docker-compose|curl|wget|tar|zip|unzip|make|cmake|brew|apt|yum|dnf|pacman|kill|ps|top|htop|df|du|mount|umount|echo|export|source|alias|unalias|which|whereis|man|tail|head|less|more|sort|uniq|wc|awk|sed|cut|tr|tee|xargs|chmod|chown|ln|touch|date|cal|env|history|clear|exit)\b/gm },
       { type: 'operator', regex: /[|;&><]/g }
@@ -108,8 +108,8 @@
     return tokens;
   }
 
-  // Register highlights for a single element
-  function highlightElement(element) {
+  // Collect `StaticRanges` by token type for a single element into a shared map
+  function collectRanges(element, rangesByType) {
     const textNode = element.firstChild;
     if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
       return;
@@ -123,9 +123,6 @@
     const source = textNode.textContent;
     const tokens = tokenize(source, lang);
 
-    // Group ranges by type
-    const groups = new Map();
-
     for (const token of tokens) {
       const range = new StaticRange({
         startContainer: textNode,
@@ -134,22 +131,25 @@
         endOffset: token.end
       });
 
-      if (!groups.has(token.type)) {
-        groups.set(token.type, []);
+      if (!rangesByType.has(token.type)) {
+        rangesByType.set(token.type, []);
       }
-      groups.get(token.type).push(range);
-    }
-
-    // Create and register highlights
-    for (const [type, ranges] of groups) {
-      const highlight = new Highlight(...ranges);
-      CSS.highlights.set(type, highlight);
+      rangesByType.get(token.type).push(range);
     }
   }
 
   // Highlight all code elements with a language class
   function highlightAll() {
-    document.querySelectorAll('code[class*="language-"]').forEach(highlightElement);
+    CSS.highlights.clear();
+
+    const rangesByType = new Map();
+    document.querySelectorAll('code[class*="language-"]').forEach((element) => {
+      collectRanges(element, rangesByType);
+    });
+
+    for (const [type, ranges] of rangesByType) {
+      CSS.highlights.set(type, new Highlight(...ranges));
+    }
   }
 
   // Run on load
@@ -159,6 +159,6 @@
     highlightAll();
   }
 
-  // Expose for manual use
-  window.highlightAll = highlightAll;
+  // Expose for manual use (e.g., re-highlighting after dynamic content changes)
+  window.SyntaxDemon = { highlightAll };
 })();

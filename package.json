@@ -1,0 +1,15 @@
+{
+  "description": "Super-simple code highlighting via the CSS Custom Highlight API",
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  },
+  "license": "MIT",
+  "name": "syntax-demon",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check-contrast": "node scripts/check-contrast.mjs",
+    "prepare": "node scripts/install-hooks.mjs"
+  },
+  "version": "1.0.0"
+}

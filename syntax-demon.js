@@ -11,6 +11,24 @@
     return;
   }
 
+  // Replaced with the actual contents of syntax-demon.css at build time (see
+  // scripts/build.mjs), so dist/syntax-demon.js is a single self-hosted file.
+  // Left as a placeholder here; the source setup (see index.html) loads
+  // syntax-demon.css separately instead.
+  const CSS_EMBEDDED = '/*__SYNTAX_DEMON_CSS_PLACEHOLDER__*/';
+
+  if (!CSS_EMBEDDED.includes('__SYNTAX_DEMON_CSS_PLACEHOLDER__')) {
+    const style = document.createElement('style');
+    // Propagates this script’s own CSP nonce (if any) to the `style` element,
+    // so a nonce-based Content Security Policy covers it automatically
+    const nonce = document.currentScript && document.currentScript.nonce;
+    if (nonce) {
+      style.nonce = nonce;
+    }
+    style.textContent = CSS_EMBEDDED;
+    document.head.appendChild(style);
+  }
+
   // Token patterns per language
   const languages = {
 
@@ -123,7 +141,7 @@
       { type: 'builtin', regex: /\b(?:print|len|range|str|int|float|bool|list|dict|set|tuple|type|isinstance|super|self|enumerate|zip|map|filter|sorted|reversed|open|input|format|repr|iter|next|abs|min|max|sum|any|all|Exception|ValueError|TypeError|KeyError|IndexError|StopIteration)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?[jJ]?\b/g },
       { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
-      { type: 'operator', regex: /[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|->|:=/g },
+      { type: 'operator', regex: /<<=|>>=|<<|>>|[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|[*/&|^]=?|~|->|:=/g },
       { type: 'punctuation', regex: /[{}[\]();,:.]/g }
     ],
 

@@ -2,12 +2,13 @@
 <title>Syntax Demon</title>
 <meta name=viewport content="initial-scale=1,width=device-width">
 <link rel=stylesheet href=syntax-demon.css>
+<script src=syntax-demon.js defer></script>
 <style>
 	body {
 		color: #1a1a1a;
 		font-family: ui-sans-serif, system-ui, sans-serif;
 		line-height: 1.5;
-		margin: ;
+		margin: 0;
 		padding: 2rem;
 		background: #f8f9fa;
 	}
@@ -37,7 +38,7 @@
 	}
 
 	pre {
-		background: #f5f5f7;
+		background: var(--sd-background);
 		border-radius: 6px;
 		color: #1e1e2e;
 		line-height: 1.5;
@@ -58,7 +59,7 @@
 		}
 
 		pre {
-			background: #1e1e2e;
+			background: var(--sd-background);
 			color: #cdd6f4;
 		}
 
@@ -166,4 +167,3 @@ ssh deploy@server.example.com "cd /var/www && git pull && pm2 restart app"</code
 <blockquote>
 	<p>Use <code class=language-js>console.log("hello")</code> for debugging, or <code class=language-shell>npm install</code> to install.
 </blockquote>
-<script src=syntax-demon.js></script>

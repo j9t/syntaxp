@@ -1,0 +1,50 @@
+name: "Release"
+
+on:
+  push:
+    branches: main
+    paths:
+      - package.json
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Check out repository"
+        uses: actions/checkout@v7
+      - name: "Set up Node"
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: "Determine version"
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git rev-parse "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "is_new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_new=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: "Install dependencies"
+        if: steps.version.outputs.is_new == 'true'
+        run: npm ci
+      - name: "Check contrast"
+        if: steps.version.outputs.is_new == 'true'
+        run: npm run check-contrast
+      - name: "Build"
+        if: steps.version.outputs.is_new == 'true'
+        run: npm run build
+      - name: "Tag and publish release"
+        if: steps.version.outputs.is_new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" dist/* --generate-notes

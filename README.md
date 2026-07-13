@@ -46,13 +46,20 @@ Download a versioned release from the [releases page](https://github.com/j9t/syn
 
 ## Supported Languages
 
-First batch—more languages are to follow. Contributions are welcome!
-
-* `language-html`
+* `language-html`/`language-xml`
 * `language-css`
 * `language-js`
 * `language-ts`
-* `language-shell`
+* `language-shell` (alias: `language-bash`)
+* `language-markdown` (alias: `language-md`)
+* `language-json`
+* `language-yaml`
+* `language-sql`
+* `language-php`
+* `language-python` (alias: `language-py`)
+* `language-diff` (alias: `language-patch`)
+
+Do you miss an important language or alias? Contributions are welcome!
 
 ## Browser Support
 

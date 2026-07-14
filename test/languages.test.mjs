@@ -215,6 +215,18 @@ test('`http` standalone header line', () => {
   assertHasToken(tokens, 'string', 'id=a3fWa; Secure; HttpOnly');
 });
 
+test('`http` does not mistake a JSON body’s mid-line colon for a header value', () => {
+  const tokens = tokenize(
+    'language-http',
+    'GET /api HTTP/1.1\nHost: example.com\n\n{"id": 42, "name": "Ada"}'
+  );
+  assertHasToken(tokens, 'string', 'example.com');
+  assert.ok(
+    !tokens.some((t) => t.type === 'string' && t.text.includes('"name"')),
+    `body content leaked into a header-value string token: ${JSON.stringify(tokens)}`
+  );
+});
+
 test('`apacheconf`', () => {
   const tokens = tokenize(
     'language-apacheconf',

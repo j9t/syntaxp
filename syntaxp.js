@@ -174,7 +174,7 @@
       { type: 'path', regex: /(?<=^(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|CONNECT|TRACE)\s)\S+/gm },
       { type: 'builtin', regex: /\bHTTP\/[0-9.]+\b/g },
       { type: 'property', regex: /^[A-Za-z][A-Za-z0-9-]*(?=:)/gm },
-      { type: 'string', regex: /(?<=:\s).+$/gm },
+      { type: 'string', regex: /(?<=^[A-Za-z][A-Za-z0-9-]*:\s).+$/gm },
       { type: 'punctuation', regex: /[:/]/g }
     ],
 
@@ -239,9 +239,13 @@
 
   // Languages considered by `detectLanguage`—canonical names only (aliases
   // share a tokenizer with one of these, so scoring them separately would
-  // just duplicate a result already covered here)
+  // just duplicate a result already covered here).
+  //
+  // `html` and `apacheconf` are deliberately absent: `detectLanguage` checks
+  // both ahead of this list, and returns immediately on a match—by the time
+  // this list is consulted, both have already scored below threshold.
   const DETECTABLE_LANGUAGES = [
-    'json', 'yaml', 'diff', 'html', 'css', 'php', 'python', 'sql', 'http', 'apacheconf', 'shell', 'markdown', 'js', 'ts'
+    'json', 'yaml', 'diff', 'css', 'php', 'python', 'sql', 'http', 'shell', 'markdown', 'js', 'ts'
   ];
 
   // A guess only counts if tokens cover at least this fraction of the
@@ -311,18 +315,20 @@
   const STRONG_SIGNAL = {
     html: { types: ['tag', 'entity', 'doctype'] },
     css: { custom: (tokens, source) => tokens.some((t) => t.type === 'selector' && isStrongCssSelector(t, source)) },
-    // No bare `string` here: A quoted value alone is far too common outside
-    // JS/TS (HTML attributes, config values, …) to count as distinctive on
-    // its own—see the `.htaccess` `Header … "default-src 'self'"` case this
-    // guarded against
+    // No bare `string` or `function` type here: A quoted value alone is far
+    // too common outside JS/TS (HTML attributes, config values, …) to count
+    // as distinctive on its own—see the `.htaccess` `Header … "default-src
+    // 'self'"` case this guarded against—and neither is a bare call
+    // expression (`foo(1); bar(2);`), which is generic enough to appear in
+    // many languages. A curated keyword remains the signal.
     js: { words: { keyword: new Set([
       'function', 'const', 'let', 'var', 'class', 'import', 'export', 'async', 'await',
       'return', 'typeof', 'instanceof', 'extends'
-    ]) }, types: ['function'] },
+    ]) } },
     ts: { words: { keyword: new Set([
       'function', 'const', 'let', 'var', 'interface', 'class', 'import', 'export',
       'async', 'await', 'return', 'typeof', 'instanceof', 'extends', 'implements'
-    ]) }, types: ['function'] },
+    ]) } },
     shell: { types: ['command', 'flag', 'variable'] },
     php: { types: ['variable'] },
     python: { words: {
@@ -421,7 +427,9 @@
     }
 
     let best = null;
-    let bestScore = MIN_DETECTION_SCORE;
+    // Starts below `MIN_DETECTION_SCORE` (rather than at it) so a language
+    // scoring exactly the threshold still qualifies here
+    let bestScore = MIN_DETECTION_SCORE - Number.EPSILON;
 
     for (const lang of DETECTABLE_LANGUAGES) {
       const score = scoreLanguage(source, lang);

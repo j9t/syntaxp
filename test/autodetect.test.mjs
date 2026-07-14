@@ -59,6 +59,14 @@ test('`detectLanguage` still recognizes real `ts`/`js` via a strong keyword', ()
   assert.equal(window.syntaxp.detectLanguage('interface X { a: string }\nconst x: X = { a: "y" };'), 'ts');
 });
 
+test('`detectLanguage` does not mistake a keyword-free call expression for `js`/`ts`', () => {
+  const { window } = runSyntaxp(jsSource);
+  // A bare `identifier(args)` call, with no `js`/`ts`-distinctive keyword,
+  // is generic enough to plausibly be many languages—not distinctive enough
+  // to guess on its own.
+  assert.equal(window.syntaxp.detectLanguage('foo(1); bar(2);'), null);
+});
+
 test('`detectLanguage` recognizes a plain CSS ruleset with a bare type selector', () => {
   const { window } = runSyntaxp(jsSource);
   assert.equal(window.syntaxp.detectLanguage('p {\n  margin-inline-start: 1rem;\n}'), 'css');

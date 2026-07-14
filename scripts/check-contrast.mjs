@@ -3,7 +3,7 @@
 // Validates every `--s5p-*` token color in syntaxp.css against the
 // `--s5p-background` reference color for the same palette (light/dark), at a
 // self-imposed minimum of 5:1—stricter than WCAG AA’s 4.5:1 for normal text,
-// as a safety margin since token colors are reused as-is on arbitrary sites.
+// as a safety margin since token colors are reused as-is on arbitrary sites
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -46,9 +46,9 @@ function contrastRatio(hexA, hexB) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Light palette: the first `:root { ... }` block, before any @media block.
+// Light palette: the first `:root { … }` block, before any `@media` block
 const lightBlock = css.slice(0, css.indexOf('@media'));
-// Dark palette: the `:root { ... }` block nested inside prefers-color-scheme: dark.
+// Dark palette: the `:root { … }` block nested inside `prefers-color-scheme: dark`
 const darkBlock = css.slice(css.indexOf('@media'));
 
 const palettes = {

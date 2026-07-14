@@ -11,6 +11,11 @@
     return;
   }
 
+  // `document.currentScript` is only valid during this script’s own
+  // synchronous execution, so it’s captured once, up front, for both the CSP
+  // nonce (below) and the `data-autodetect` opt-in (see `highlightAll`)
+  const currentScript = document.currentScript;
+
   // Replaced with the actual contents of syntaxp.css at build time (see
   // scripts/build.mjs), so dist/syntaxp.js is a single self-hosted file.
   // Left as a placeholder here; the source setup (see index.html) loads
@@ -21,7 +26,7 @@
     const style = document.createElement('style');
     // Propagates this script’s own CSP nonce (if any) to the `style` element,
     // so a nonce-based Content Security Policy covers it automatically
-    const nonce = document.currentScript && document.currentScript.nonce;
+    const nonce = currentScript && currentScript.nonce;
     if (nonce) {
       style.nonce = nonce;
     }
@@ -48,6 +53,11 @@
       { type: 'number', regex: /\b\d+(\.\d+)?(px|em|rem|%|vh|vw|s|ms|deg|fr)?\b/g },
       { type: 'keyword', regex: /@(media|import|keyframes|font-face|supports|charset|namespace|layer|property)\b/g },
       { type: 'selector', regex: /[.#:][a-zA-Z_-][a-zA-Z0-9_-]*/g },
+      // A bare type selector (`p`, `h1`, `body`…) has no punctuation prefix
+      // to key off, unlike `.class`/`#id`/`:pseudo` above—the one thing
+      // that reliably marks it as a selector rather than, say, a property
+      // value is sitting directly before a rule’s opening `{`
+      { type: 'selector', regex: /[a-zA-Z][a-zA-Z0-9-]*(?=\s*\{)/g },
       { type: 'property', regex: /(?<=^|[{;])\s*[a-zA-Z-]+(?=\s*:)/gm },
       { type: 'function', regex: /(?:rgba?|hsla?|linear-gradient|radial-gradient|calc|var|env|clamp|min|max|url)\s*(?=\()/g },
       { type: 'punctuation', regex: /[{}();:,]/g }
@@ -69,7 +79,12 @@
       { type: 'string', regex: /`[\s\S]*?`|"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|in|of|class|extends|super|this|import|from|export|default|async|await|try|catch|finally|throw|yield|static|get|set|interface|type|enum|implements|abstract|declare|namespace|module|as|is|keyof|readonly|private|protected|public|override|satisfies|infer|never|unknown|any|void|null|undefined|true|false)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?\b/g },
-      { type: 'function', regex: /\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*[<(])/g },
+      // `<` is only accepted immediately adjacent (no whitespace)—real
+      // generics (`getUsers<T>`, `Array<number>`) are always written tight;
+      // allowing a space too made ordinary prose immediately before a tag
+      // (“word <tag”) register as a fake generic call, e.g., inside an HTML
+      // example this tokenizer was asked to score during language detection
+      { type: 'function', regex: /\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*\(|<)/g },
       { type: 'type', regex: /\b(string|number|boolean|bigint|symbol|object|Array|Promise|Record|Partial|Required|Pick|Omit|Exclude|Extract|NonNullable|ReturnType|Parameters|ConstructorParameters|InstanceType)\b/g },
       { type: 'operator', regex: /[=!<>]=?=?|&&|\|\||[+\-*/%]=?|\?\?|\.\.\.|=>/g },
       { type: 'punctuation', regex: /[{}[\]();:,.]/g }
@@ -150,6 +165,28 @@
       { type: 'keyword', regex: /^@@.*@@.*$/gm },
       { type: 'string', regex: /^\+.*$/gm },
       { type: 'tag', regex: /^-.*$/gm }
+    ],
+
+    http: [
+      { type: 'keyword', regex: /^(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|CONNECT|TRACE)\b/gm },
+      { type: 'number', regex: /(?<=^HTTP\/[0-9.]+\s)\d{3}\b/gm },
+      { type: 'string', regex: /(?<=^HTTP\/[0-9.]+\s\d{3}\s).+$/gm },
+      { type: 'path', regex: /(?<=^(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|CONNECT|TRACE)\s)\S+/gm },
+      { type: 'builtin', regex: /\bHTTP\/[0-9.]+\b/g },
+      { type: 'property', regex: /^[A-Za-z][A-Za-z0-9-]*(?=:)/gm },
+      { type: 'string', regex: /(?<=^[A-Za-z][A-Za-z0-9-]*:\s).+$/gm },
+      { type: 'punctuation', regex: /[:/]/g }
+    ],
+
+    apacheconf: [
+      { type: 'comment', regex: /#.*$/gm },
+      { type: 'string', regex: /"[^"]*"|'[^']*'/g },
+      { type: 'tag', regex: /<\/?[A-Za-z][A-Za-z0-9]*/g },
+      { type: 'variable', regex: /[$%]\{[^}]*\}|\$\d+|%\d+/g },
+      { type: 'flag', regex: /\[[^\]\n]*\]/g },
+      { type: 'keyword', regex: /^\s*(?:AddCharset|AddDefaultCharset|AddEncoding|AddHandler|AddLanguage|AddOutputFilter|AddOutputFilterByType|AddType|Allow|AllowOverride|AuthName|AuthType|AuthUserFile|CheckSpelling|ContentDigest|Deny|DefaultLanguage|Deflate|DirectoryIndex|DocumentRoot|ErrorDocument|ErrorLog|FileETag|Header|IndexIgnore|Listen|LoadModule|Options|Order|Redirect|RedirectMatch|Require|RewriteBase|RewriteCond|RewriteEngine|RewriteRule|SSLEngine|ServerAdmin|ServerAlias|ServerName|SetEnv|SetEnvIf|SetEnvIfNoCase)\b/gm },
+      { type: 'number', regex: /\b\d+\b/g },
+      { type: 'punctuation', regex: /[<>/=]/g }
     ]
   };
 
@@ -200,14 +237,219 @@
     return tokens;
   }
 
+  // Languages considered by `detectLanguage`—canonical names only (aliases
+  // share a tokenizer with one of these, so scoring them separately would
+  // just duplicate a result already covered here).
+  //
+  // `html` and `apacheconf` are deliberately absent: `detectLanguage` checks
+  // both ahead of this list, and returns immediately on a match—by the time
+  // this list is consulted, both have already scored below threshold.
+  const DETECTABLE_LANGUAGES = [
+    'json', 'yaml', 'diff', 'css', 'php', 'python', 'sql', 'http', 'shell', 'markdown', 'js', 'ts'
+  ];
+
+  // A guess only counts if tokens cover at least this fraction of the
+  // source—low enough to catch short snippets, high enough to leave
+  // prose-like text (where a stray symbol or two might match) alone
+  const MIN_DETECTION_SCORE = 0.3;
+
+  // `operator`/`punctuation`/`number` tokens are common to nearly any text
+  // (a bare `<`/`>`/`=`—needed so real comparisons like `a < b` highlight—
+  // matches constantly inside HTML’s angle brackets; digits show up
+  // everywhere) and carry little language-specific signal on their own, so
+  // they only count for a quarter of their length toward a detection score
+  const WEAK_DETECTION_TYPES = new Set(['operator', 'punctuation', 'number']);
+
+  // Many token types are themselves common to more than one language (an
+  // `attribute`-looking `word=value` shows up in shell/ini/vi syntax too, not
+  // just HTML) and several keyword lists include short, ordinary English
+  // words (`set`, `get`, `is`, `as`, `type`, `def`…) that collide with prose
+  // or other languages’ syntax. So a language is only eligible for detection
+  // if the source also contains at least one token from a narrower,
+  // far-less-ambiguous set—either a distinctive token type, or (for
+  // languages whose keyword lists are prose-prone) a specific keyword text.
+  // `types` trusts any token of that type as strong evidence (safe for
+  // types whose pattern is already symbol-anchored—`$var`, `HTTP/1.1`,
+  // `"key":`—rather than a bare word). `words` is for token types whose
+  // full list is prose-prone (Python’s builtins include ordinary words like
+  // `set`, `list`, `open`) but that still have a distinctive core subset.
+  // Real, unambiguous CSS pseudo-classes/elements—used to gate `:word`
+  // selector matches, since the bare pattern also matches vi commands
+  // (`:set`) and colons inside unrelated quoted strings
+  // (`'lighthouse:default'`).
+  const CSS_PSEUDO = new Set([
+    'hover', 'focus', 'focus-visible', 'focus-within', 'active', 'visited', 'link', 'target',
+    'disabled', 'enabled', 'checked', 'indeterminate', 'required', 'optional', 'valid', 'invalid',
+    'read-only', 'read-write', 'placeholder-shown', 'default', 'first', 'last', 'only', 'empty',
+    'root', 'before', 'after', 'first-line', 'first-letter', 'selection', 'placeholder', 'marker',
+    'backdrop', 'host', 'not', 'is', 'where', 'has', 'first-child', 'last-child', 'only-child',
+    'nth-child', 'nth-last-child', 'first-of-type', 'last-of-type', 'only-of-type', 'nth-of-type',
+    'nth-last-of-type', 'lang', 'dir', 'scope', 'defined', 'fullscreen', 'in-range', 'out-of-range'
+  ]);
+
+  // A `.`/`#`-prefixed match is only trustworthy as a selector when
+  // nothing that looks like an identifier sits directly before it—real CSS
+  // selectors are preceded by whitespace, a combinator, or nothing, never by
+  // a bare word character. Left unguarded, this pattern matches JS/Python
+  // property/method-access chains identically (`values.slice`, `a.data`),
+  // which is what mistagged two real ESLint/Eleventy config snippets as CSS.
+  function isStrongCssSelector(token, source) {
+    const text = source.slice(token.start, token.end);
+    if (text[0] === ':') {
+      return CSS_PSEUDO.has(text.slice(1).toLowerCase());
+    }
+    if (text[0] === '.' || text[0] === '#') {
+      // `)`/`]` also disqualify: A chained call/index like `.slice().sort()`
+      // or `arr[0].sort()` puts one of those directly before the next dot,
+      // same as `values.slice` does—still a property-access chain, not a
+      // selector (a real compound selector like `a[href].active` immediately
+      // after `]` exists but is markedly rarer than JS chaining in practice)
+      const before = token.start > 0 ? source[token.start - 1] : '';
+      return !/[a-zA-Z0-9_)\]]/.test(before);
+    }
+    // No prefix character: the bare-type-selector-before-`{` pattern,
+    // already gated by requiring a real `{` to follow
+    return true;
+  }
+
+  const STRONG_SIGNAL = {
+    html: { types: ['tag', 'entity', 'doctype'] },
+    css: { custom: (tokens, source) => tokens.some((t) => t.type === 'selector' && isStrongCssSelector(t, source)) },
+    // No bare `string` or `function` type here: A quoted value alone is far
+    // too common outside JS/TS (HTML attributes, config values, …) to count
+    // as distinctive on its own—see the `.htaccess` `Header … "default-src
+    // 'self'"` case this guarded against—and neither is a bare call
+    // expression (`foo(1); bar(2);`), which is generic enough to appear in
+    // many languages. A curated keyword remains the signal.
+    js: { words: { keyword: new Set([
+      'function', 'const', 'let', 'var', 'class', 'import', 'export', 'async', 'await',
+      'return', 'typeof', 'instanceof', 'extends'
+    ]) } },
+    ts: { words: { keyword: new Set([
+      'function', 'const', 'let', 'var', 'interface', 'class', 'import', 'export',
+      'async', 'await', 'return', 'typeof', 'instanceof', 'extends', 'implements'
+    ]) } },
+    shell: { types: ['command', 'flag', 'variable'] },
+    php: { types: ['variable'] },
+    python: { words: {
+      keyword: new Set(['def', 'import', 'class', 'lambda', 'elif', 'except', 'yield', 'raise', 'nonlocal', 'assert']),
+      builtin: new Set(['isinstance', 'enumerate', 'StopIteration', 'ValueError', 'TypeError', 'KeyError', 'IndexError'])
+    } },
+    json: { types: ['property'] },
+    yaml: { types: ['property'] },
+    http: { types: ['builtin'] },
+    // `types: ['keyword']` is safe here (unlike js/python) because the
+    // `keyword` pattern is the curated directive list already, not a
+    // broad word list. `tag` is narrowed to actual Apache section names—
+    // left as a bare type, it’d match any `<word>`, including a real
+    // `<script>`, and win detection away from genuinely embedded HTML.
+    apacheconf: { types: ['keyword'], words: { tag: new Set([
+      'IfModule', 'Directory', 'Files', 'FilesMatch', 'Location', 'VirtualHost', 'LimitExcept'
+    ]) } },
+    diff: { types: ['comment', 'keyword'] },
+    markdown: { types: ['keyword'] },
+    // SQL’s keyword pattern matches case-insensitively (real SQL is often
+    // written in lowercase), so a naive “the keyword list is already
+    // distinctive” assumption missed that several entries are ordinary
+    // English/config words too (e.g., an Apache `Header always SET …`
+    // directive). `caseInsensitiveWords` compares both sides upper-cased so
+    // this still matches real lowercase SQL.
+    sql: { words: { keyword: new Set([
+      'SELECT', 'INSERT', 'DELETE', 'CREATE', 'ALTER', 'DROP', 'JOIN', 'DISTINCT',
+      'UNION', 'PRIMARY', 'FOREIGN', 'REFERENCES', 'CONSTRAINT', 'PROCEDURE', 'TRIGGER', 'DECLARE'
+    ]) }, caseInsensitiveWords: true }
+  };
+
+  function hasStrongSignal(tokens, source, lang) {
+    const spec = STRONG_SIGNAL[lang];
+    if (!spec) {
+      return true;
+    }
+    if (spec.custom) {
+      return spec.custom(tokens, source);
+    }
+    return tokens.some((t) => {
+      if (spec.types && spec.types.includes(t.type)) {
+        return true;
+      }
+      if (spec.words && spec.words[t.type]) {
+        // `tag` matches include the leading `<`/`</`—strip it so curated
+        // tag-name sets (e.g., apacheconf’s section names) can list bare names
+        const text = source.slice(t.start, t.end).replace(t.type === 'tag' ? /^<\/?/ : /^/, '');
+        return spec.words[t.type].has(spec.caseInsensitiveWords ? text.toUpperCase() : text);
+      }
+      return false;
+    });
+  }
+
+  // Scores how much of `source` a language’s tokenizer accounts for, as a
+  // weighted fraction of its length—reuses `tokenize` rather than a separate
+  // detection grammar, so detection can’t drift out of sync with highlighting
+  function scoreLanguage(source, lang) {
+    const tokens = tokenize(source, lang);
+    if (tokens.length === 0 || !hasStrongSignal(tokens, source, lang)) {
+      return 0;
+    }
+
+    const covered = tokens.reduce((sum, t) => {
+      const length = t.end - t.start;
+      return sum + (WEAK_DETECTION_TYPES.has(t.type) ? length * 0.25 : length);
+    }, 0);
+    return covered / source.length;
+  }
+
+  // Guesses a language for `source`, or returns `null` if nothing clears
+  // `MIN_DETECTION_SCORE`. Only used for `pre > code` elements that don’t
+  // already carry a `language-*` class—see `highlightAll`’s `data-autodetect`
+  // opt-in
+  function detectLanguage(source) {
+    // An Apache directive keyword (`RewriteEngine`, `AddCharset`…) is a much
+    // more specific signal than a generic angle-bracket tag—and Apache’s
+    // `<IfModule>`/`<Directory>` sections are themselves angle-bracket
+    // syntax indistinguishable from HTML tags by this tokenizer—so
+    // `apacheconf` is checked, and wins outright, before `html`’s own
+    // priority check below gets a chance to claim the tags as HTML
+    if (scoreLanguage(source, 'apacheconf') >= MIN_DETECTION_SCORE) {
+      return 'apacheconf';
+    }
+
+    // Real markup tags are decisive: A `<script>`/`<style>` element commonly
+    // embeds genuine JS/CSS, which can otherwise out-score `html` on raw
+    // token coverage—but the source is still fundamentally HTML, elements and
+    // all, so `html` wins outright whenever it clears its own bar, before
+    // comparing it against anything else
+    if (scoreLanguage(source, 'html') >= MIN_DETECTION_SCORE) {
+      // `html`/`xml` share a tokenizer (same markup, same tags/attributes/
+      // entities), so scoring can’t tell them apart—but an XML declaration
+      // is something HTML never has, so it settles which class name is the
+      // more accurate one to write (e.g., an RSS feed, an SVG document)
+      return /<\?xml\s/.test(source) ? 'xml' : 'html';
+    }
+
+    let best = null;
+    // Starts below `MIN_DETECTION_SCORE` (rather than at it) so a language
+    // scoring exactly the threshold still qualifies here
+    let bestScore = MIN_DETECTION_SCORE - Number.EPSILON;
+
+    for (const lang of DETECTABLE_LANGUAGES) {
+      const score = scoreLanguage(source, lang);
+      if (score > bestScore) {
+        bestScore = score;
+        best = lang;
+      }
+    }
+
+    return best;
+  }
+
   // Collect `StaticRanges` by token type for a single element into a shared map
-  function collectRanges(element, rangesByType) {
+  function collectRanges(element, rangesByType, langOverride) {
     const textNode = element.firstChild;
     if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
       return;
     }
 
-    const lang = (element.className.match(/language-(\w+)/) || [])[1];
+    const lang = langOverride || (element.className.match(/language-(\w+)/) || [])[1];
     if (!lang || !languages[lang]) {
       return;
     }
@@ -230,7 +472,10 @@
     }
   }
 
-  // Highlight all code elements with a language class
+  // Highlight all code elements with a language class, plus—if the host
+  // script carries a `data-autodetect` attribute—`pre > code` elements that
+  // don’t (opt-in: unlike class-based highlighting, a guess can be wrong,
+  // so this shouldn’t change behavior for existing adopters by default)
   function highlightAll() {
     CSS.highlights.clear();
 
@@ -238,6 +483,20 @@
     document.querySelectorAll('code[class*="language-"]').forEach((element) => {
       collectRanges(element, rangesByType);
     });
+
+    const autoDetect = currentScript && currentScript.hasAttribute('data-autodetect');
+    if (autoDetect) {
+      document.querySelectorAll('pre > code:not([class*="language-"])').forEach((element) => {
+        const textNode = element.firstChild;
+        if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+          return;
+        }
+        const lang = detectLanguage(textNode.textContent);
+        if (lang) {
+          collectRanges(element, rangesByType, lang);
+        }
+      });
+    }
 
     for (const [type, ranges] of rangesByType) {
       CSS.highlights.set(type, new Highlight(...ranges));
@@ -251,6 +510,9 @@
     highlightAll();
   }
 
-  // Expose for manual use (e.g., re-highlighting after dynamic content changes)
-  window.syntaxp = { highlightAll };
+  // Expose for manual use (e.g., re-highlighting after dynamic content
+  // changes, or reusing the same heuristic to tag a backlog of code blocks
+  // with an explicit `language-*` class ahead of time instead of relying on
+  // `data-autodetect` at runtime)
+  window.syntaxp = { highlightAll, detectLanguage };
 })();

@@ -14,7 +14,7 @@
 // copy) and isn’t emitted to dist/ on its own.
 //
 // Also writes a .hash file alongside each dist JS file, containing the
-// exact `style-src` hash-source (e.g. `'sha256-…'`) for that file’s embedded
+// exact `style-src` hash-source (e.g., `'sha256-…'`) for that file’s embedded
 // CSS—for sites under a host-based Content Security Policy that can’t use
 // the auto-injected <style> via a nonce; see the README’s Content Security
 // Policies section. .hash files are picked up by release.yml’s
@@ -34,7 +34,7 @@ const { version } = JSON.parse(readFileSync(`${dirRoot}/package.json`, 'utf8'));
 const LEADING_COMMENT = /^\/\*[\s\S]*?\*\//;
 const CSS_PLACEHOLDER = "'/*__SYNTAXP_CSS_PLACEHOLDER__*/'";
 // Overridable so the test suite can build into a throwaway directory
-// instead of the real dist/—see test/build.test.mjs.
+// instead of the real dist/—see test/build.test.mjs
 const dirDist = process.env.SYNTAXP_DIST_DIR || `${dirRoot}/dist`;
 
 mkdirSync(dirDist, { recursive: true });
@@ -43,7 +43,7 @@ const rawCss = readFileSync(`${dirRoot}/syntaxp.css`, 'utf8');
 const rawJs = readFileSync(`${dirRoot}/syntaxp.js`, 'utf8');
 
 if (!LEADING_COMMENT.test(rawJs)) {
-  throw new Error('Expected syntaxp.js to start with a /* … */ comment.');
+  throw new Error('Expected syntaxp.js to start with a `/* … */` comment.');
 }
 if (!rawJs.includes(CSS_PLACEHOLDER)) {
   throw new Error(`Expected syntaxp.js to contain the ${CSS_PLACEHOLDER} embed placeholder.`);

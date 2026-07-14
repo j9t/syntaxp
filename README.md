@@ -35,7 +35,7 @@ Inline code works, too:
 
 The script auto-discovers all `<code class=language-*>` elements on `DOMContentLoaded`.
 
-### Markdown Fences
+### Markdown Fences Support
 
 Markdown fences that emit `class=language-x` on `<code>` elements work with syntaxp:
 
@@ -43,7 +43,17 @@ If your code blocks come from Markdown and contain language information, `class=
 
 Two notable exceptions: Pandoc puts an unprefixed class on `<pre>` instead of `<code>` by default, and Jekyll’s default kramdown/Rouge setup pre-highlights code into its own `<span>` elements before this script would see it. Check your generated HTML if you’re not on one of the toolchains above.
 
-### Content Security Policies
+### Language Auto-Detection (Opt-In)
+
+For older content with code blocks not using `language-*` classes, add `data-autodetect` to the script element:
+
+```html
+<script src=/path/to/syntaxp.js defer data-autodetect></script>
+```
+
+With this set, syntaxp also guesses a language for any `pre > code` element that has no `language-*` class, using the same tokenizers as regular highlighting, and skips elements it isn’t reasonably confident about (left as plain code, same graceful fallback as an unsupported browser). This is a heuristic, not real language detection, so expect the occasional miss—tagging code blocks with an explicit `class=language-x` is the most reliable option and is unaffected by this setting either way. (The option is off by default, since a wrong guess is a worse outcome than no highlighting.)
+
+### Content Security Policy Management
 
 The style sheet injected by syntaxp is a `<style>` element, which, if you run a Content Security Policy, is governed by your `style-src` policy (specifically `style-src-elem`, if set). This may require one of the following:
 
@@ -67,6 +77,8 @@ The style sheet injected by syntaxp is a `<style>` element, which, if you run a 
 * `language-php`
 * `language-python` (alias: `language-py`)
 * `language-diff` (alias: `language-patch`)
+* `language-http`
+* `language-apacheconf`
 
 Do you miss an important language or alias? Contributions are welcome!
 
@@ -101,7 +113,7 @@ Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 `syntaxp.css` and `syntaxp.js` are the source of truth and have no build step of their own—the tooling below only produces version-stamped release files in `dist/`, and is a dev-time dependency only. Run `npm install` once to fetch it and set up a pre-commit hook that runs the contrast check whenever `syntaxp.css` is staged.
 
 * `npm run check-contrast`: Check every token color against its palette’s `--s5p-background` (also runs automatically before each commit that touches `syntaxp.css`)
-* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus a `.hash` file next to each containing its `style-src` hash-source (see [note on Content Security Policies](#content-security-policies))
+* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus a `.hash` file next to each containing its `style-src` hash-source (see [note on Content Security Policies](#content-security-policy-management))
 * `npm test`: Run the test suite
 
 ### Releasing

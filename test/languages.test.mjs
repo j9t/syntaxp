@@ -33,12 +33,12 @@ test('`xml` is an alias for `html`', () => {
 });
 
 test('`css`', () => {
-  // Note: a leading space is part of the `property` match (consistent with
-  // this tokenizer's handling of leading whitespace elsewhere, e.g. YAML/
+  // Note: A leading space is part of the `property` match (consistent with
+  // this tokenizer's handling of leading whitespace elsewhere, e.g., YAML/
   // Markdown—harmless for rendering since whitespace carries no color), and
   // a `#rrggbb` color value is matched by the `selector` pattern (same shape
   // as an ID selector)—a pre-existing quirk of this grammar, not something
-  // introduced here.
+  // introduced here
   const tokens = tokenize('language-css', '@media (min-width: 1px) { .a { color: #fff; } }');
   assertHasToken(tokens, 'keyword', '@media');
   assertHasToken(tokens, 'selector', '.a');
@@ -46,11 +46,11 @@ test('`css`', () => {
 });
 
 test('`js`', () => {
-  // `console.log(…)` rather than a bare builtin call like `fetch(…)`: when a
+  // `console.log(…)` rather than a bare builtin call like `fetch(…)`: When a
   // builtin is called directly, `function`’s pattern (listed first) and
   // `builtin`’s pattern match the identical span, and `function` wins by
   // pattern order—so `builtin` only surfaces for non-called references like
-  // `console` here.
+  // `console` here
   const tokens = tokenize('language-js', 'const x = console.log(1); // c');
   assertHasToken(tokens, 'keyword', 'const');
   assertHasToken(tokens, 'builtin', 'console');
@@ -95,7 +95,7 @@ test('`sql`', () => {
   // `COUNT` is deliberately in the keyword list (alongside
   // `SUM`/`AVG`/`MIN`/`MAX`), so it wins over the identically-spanned
   // `function` match by pattern order—`LOWER(…)` exercises a genuine
-  // (non-keyword) function call.
+  // (non-keyword) function call
   const tokens = tokenize('language-sql', 'SELECT COUNT(id), LOWER(name) FROM t WHERE x = 1 -- c');
   assertHasToken(tokens, 'keyword', 'SELECT');
   assertHasToken(tokens, 'keyword', 'COUNT');
@@ -181,4 +181,62 @@ test('`diff`', () => {
 
 test('`patch` is an alias for `diff`', () => {
   assert.ok(sameHighlighting(jsSource, '+added\n-removed', 'language-diff', 'language-patch'));
+});
+
+test('`http` request', () => {
+  const tokens = tokenize(
+    'language-http',
+    'GET /api/users/42 HTTP/1.1\nHost: example.com\nAuthorization: Bearer abc123'
+  );
+  assertHasToken(tokens, 'keyword', 'GET');
+  assertHasToken(tokens, 'path', '/api/users/42');
+  assertHasToken(tokens, 'builtin', 'HTTP/1.1');
+  assertHasToken(tokens, 'property', 'Host');
+  assertHasToken(tokens, 'string', 'example.com');
+  assertHasToken(tokens, 'property', 'Authorization');
+  assertHasToken(tokens, 'string', 'Bearer abc123');
+});
+
+test('`http` response', () => {
+  const tokens = tokenize(
+    'language-http',
+    'HTTP/1.1 200 OK\nContent-Type: application/json'
+  );
+  assertHasToken(tokens, 'builtin', 'HTTP/1.1');
+  assertHasToken(tokens, 'number', '200');
+  assertHasToken(tokens, 'string', 'OK');
+  assertHasToken(tokens, 'property', 'Content-Type');
+  assertHasToken(tokens, 'string', 'application/json');
+});
+
+test('`http` standalone header line', () => {
+  const tokens = tokenize('language-http', 'Set-Cookie: id=a3fWa; Secure; HttpOnly');
+  assertHasToken(tokens, 'property', 'Set-Cookie');
+  assertHasToken(tokens, 'string', 'id=a3fWa; Secure; HttpOnly');
+});
+
+test('`http` does not mistake a JSON body’s mid-line colon for a header value', () => {
+  const tokens = tokenize(
+    'language-http',
+    'GET /api HTTP/1.1\nHost: example.com\n\n{"id": 42, "name": "Ada"}'
+  );
+  assertHasToken(tokens, 'string', 'example.com');
+  assert.ok(
+    !tokens.some((t) => t.type === 'string' && t.text.includes('"name"')),
+    `body content leaked into a header-value string token: ${JSON.stringify(tokens)}`
+  );
+});
+
+test('`apacheconf`', () => {
+  const tokens = tokenize(
+    'language-apacheconf',
+    '# comment\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteCond %{HTTP_HOST} ^www\\.example\\.com [NC]\nRewriteRule ^(.*)$ https://example.com/$1 [L,R=301]\n</IfModule>'
+  );
+  assertHasToken(tokens, 'comment', '# comment');
+  assertHasToken(tokens, 'tag', '<IfModule');
+  assertHasToken(tokens, 'tag', '</IfModule');
+  assertHasToken(tokens, 'keyword', 'RewriteEngine');
+  assertHasToken(tokens, 'variable', '%{HTTP_HOST}');
+  assertHasToken(tokens, 'flag', '[NC]');
+  assertHasToken(tokens, 'variable', '$1');
 });

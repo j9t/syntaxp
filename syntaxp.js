@@ -1,6 +1,6 @@
 /**
  * syntaxp: Code Highlighting via the CSS Custom Highlight API.
- * Zero-dependency syntax highlighting. No `<span>` elements, no DOM manipulation.
+ * Zero-dependency syntax highlighting. No extra HTML elements, no DOM manipulation.
  * Falls back gracefully in unsupported browsers.
  */
 

@@ -1,6 +1,6 @@
 # syntaxp Syntax Painter
 
-syntaxp provides code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/css-highlight-api-1/). Zero runtime dependencies. No `<span>` elements in the DOM.
+syntaxp provides code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/css-highlight-api-1/). Zero runtime dependencies. No extra elements in the DOM.
 
 ## How It Works
 
@@ -96,39 +96,6 @@ syntaxp requires support for [the CSS Custom Highlight API](https://caniuse.com/
 
 Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 
-## Customizing Colors
-
-Override the CSS custom properties:
-
-```css
-:root {
-  --s5p-background: #f5f5f7;
-  --s5p-keyword: #7c3aed;
-
-  /* #107636 */
-  --s5p-string: #107636;
-  --s5p-flag: #107636;
-
-  /* … */
-}
-```
-
-In `syntaxp.css`, the custom properties are grouped by shared color value (most to least visually prominent, comments last since they’re deliberately the quietest color)—several token types intentionally reuse the same color, e.g. `--s5p-function`/`--s5p-property`/`--s5p-command`.
-
-Light and dark mode palettes are included via `prefers-color-scheme` media queries.
-
-`--s5p-background` is the reference background each palette is validated against (see below); it isn’t applied by this stylesheet itself, so set your own `pre`/`code` background to match if you rely on the contrast guarantee.
-
-### Contrast
-
-Every `--s5p-*` token color is checked in CI against `--s5p-background` for its palette, at a self-imposed minimum of 5:1—stricter than [WCAG AA’s 4.5:1](https://www.w3.org/WAI/WCAG22/Techniques/general/G18) for normal text, as a margin for real-world rendering variance. Run it yourself with:
-
-```shell
-npm run check-contrast
-```
-
-If you override the default colors or background, you’re responsible for re-checking contrast for your combination; `npm run check-contrast` reads directly from `syntaxp.css`, so it works against your edits, too.
-
 ## Development
 
 `syntaxp.css` and `syntaxp.js` are the source of truth and have no build step of their own—the tooling below only produces version-stamped release files in `dist/`, and is a dev-time dependency only. Run `npm install` once to fetch it and set up a pre-commit hook that runs the contrast check whenever `syntaxp.css` is staged.
@@ -137,12 +104,12 @@ If you override the default colors or background, you’re responsible for re-ch
 * `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus a `.hash` file next to each containing its `style-src` hash-source (see [note on Content Security Policies](#content-security-policies))
 * `npm test`: Run the test suite
 
-### Releases
+### Releasing
 
-Version is tracked in `package.json`, not tagged manually. To cut a release, bump the `version` field and push (or merge a PR that does) to `main`. A [GitHub Actions workflow](https://github.com/j9t/syntaxp/actions/workflows/release.yml) then automatically:
+Version is tracked in `package.json`, not tagged manually. To issue a release, bump the `version` field and push (or merge a PR that does) to `main`. A [GitHub Actions workflow](https://github.com/j9t/syntaxp/actions/workflows/release.yml) then automatically:
 
-1. Checks contrast and builds `dist/`
-2. Tags the commit `vX.Y.Z`
-3. Publishes a GitHub release with the built files (`syntaxp.js`, `syntaxp.min.js`, and their `.hash` files) attached
+1. checks contrast and builds `dist/`,
+2. tags the commit `vX.Y.Z`, and
+3. publishes a GitHub release with the built files (`syntaxp.js`, `syntaxp.min.js`, and their `.hash` files) attached.
 
 Pushing to `main` without a `package.json` version change is a no-op—no tag or release is created.

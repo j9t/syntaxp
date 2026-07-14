@@ -12,13 +12,11 @@ Code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/cs
 
 ## Usage
 
-Include [the Syntax Demon script](https://github.com/j9t/syntax-demon/releases) on your page:
+Add [the Syntax Demon script (~11 KB minified)](https://github.com/j9t/syntax-demon/releases) to your site or page (for privacy and performance reasons, _you_ decide on hosting):
 
 ```html
-<script src=syntax-demon.js defer></script>
+<script src=/path/to/syntax-demon.js defer></script>
 ```
-
-That is, self-host `syntax-demon.js` (or the minified `syntax-demon.min.js`) on your own site—one file, CSS included. Each release is immutable and version-stamped in the file header.
 
 Then write normal code blocks:
 
@@ -39,9 +37,9 @@ The script auto-discovers all `<code class=language-*>` elements on `DOMContentL
 
 ### Markdown Fences
 
-Markdown fences should work, too:
+Markdown fences that emit `class=language-x` on `<code>` elements work with Syntax Demon:
 
-If your code blocks come from Markdown, `class=language-x` on `<code>` is the _de facto_ (not officially mandated) output of fenced code blocks with an info string—it’s what [CommonMark](https://spec.commonmark.org/)’s reference implementation and illustrative examples use, and what markdown-it (Eleventy’s default engine), Goldmark (Hugo), and the remark/rehype ecosystem all produce out of the box.
+If your code blocks come from Markdown and contain language information, `class=language-x` on `<code>` is often the output—it’s what [CommonMark](https://spec.commonmark.org/)’s reference implementation and illustrative examples use, and what markdown-it (Eleventy’s default engine), Goldmark (Hugo), and the remark/rehype ecosystem all produce out of the box.
 
 Two notable exceptions: Pandoc puts an unprefixed class on `<pre>` instead of `<code>` by default, and Jekyll’s default kramdown/Rouge setup pre-highlights code into its own `<span>` elements before this script would see it. Check your generated HTML if you’re not on one of the toolchains above.
 

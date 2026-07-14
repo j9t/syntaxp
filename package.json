@@ -4,7 +4,7 @@
     "esbuild": "^0.28.1"
   },
   "license": "MIT",
-  "name": "syntax-demon",
+  "name": "syntaxp",
   "private": true,
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -13,5 +13,5 @@
     "pretest": "npm run build",
     "test": "node --test"
   },
-  "version": "1.2.0"
+  "version": "2.0.0"
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// Validates every `--sd-*` token color in syntax-demon.css against the
-// `--sd-background` reference color for the same palette (light/dark), at a
+// Validates every `--s5p-*` token color in syntaxp.css against the
+// `--s5p-background` reference color for the same palette (light/dark), at a
 // self-imposed minimum of 5:1—stricter than WCAG AA’s 4.5:1 for normal text,
 // as a safety margin since token colors are reused as-is on arbitrary sites.
 
@@ -9,12 +9,12 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const MIN_CONTRAST = 5;
-const cssPath = fileURLToPath(new URL('../syntax-demon.css', import.meta.url));
+const cssPath = fileURLToPath(new URL('../syntaxp.css', import.meta.url));
 const css = readFileSync(cssPath, 'utf8');
 
 function extractPalette(block) {
   const palette = {};
-  const re = /--sd-([\w-]+):\s*(#[0-9a-fA-F]{3,8})\s*;/g;
+  const re = /--s5p-([\w-]+):\s*(#[0-9a-fA-F]{3,8})\s*;/g;
   let match;
   while ((match = re.exec(block)) !== null) {
     palette[match[1]] = match[2];
@@ -61,7 +61,7 @@ let failed = false;
 for (const [scheme, palette] of Object.entries(palettes)) {
   const background = palette.background;
   if (!background) {
-    console.error(`No --sd-background found for ${scheme} palette.`);
+    console.error(`No --s5p-background found for ${scheme} palette.`);
     failed = true;
     continue;
   }
@@ -78,7 +78,7 @@ for (const [scheme, palette] of Object.entries(palettes)) {
       failed = true;
     }
     console.log(
-      `  ${pass ? 'PASS' : 'FAIL'}  --sd-${name.padEnd(12)} ${color}  ${ratio.toFixed(2)}:1`
+      `  ${pass ? 'PASS' : 'FAIL'}  --s5p-${name.padEnd(12)} ${color}  ${ratio.toFixed(2)}:1`
     );
   }
 }

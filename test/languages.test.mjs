@@ -2,13 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { runSyntaxDemon, tokensFor, sameHighlighting } from './helpers/dom.mjs';
+import { runSyntaxp, tokensFor, sameHighlighting } from './helpers/dom.mjs';
 
 const dirRoot = fileURLToPath(new URL('..', import.meta.url));
-const jsSource = readFileSync(`${dirRoot}/syntax-demon.js`, 'utf8');
+const jsSource = readFileSync(`${dirRoot}/syntaxp.js`, 'utf8');
 
 function tokenize(className, text) {
-  const { highlightsByType } = runSyntaxDemon(jsSource, { codeSamples: [{ className, text }] });
+  const { highlightsByType } = runSyntaxp(jsSource, { codeSamples: [{ className, text }] });
   return tokensFor(text, highlightsByType);
 }
 
@@ -154,7 +154,7 @@ test('`markdown`', () => {
 
 test('`markdown` empty link parts do not produce zero-length tokens', () => {
   const text = '[](x.png) and [t]()';
-  const { highlightsByType } = runSyntaxDemon(jsSource, {
+  const { highlightsByType } = runSyntaxp(jsSource, {
     codeSamples: [{ className: 'language-markdown', text }]
   });
   for (const ranges of highlightsByType.values()) {

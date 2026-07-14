@@ -22,7 +22,7 @@ jobs:
       - name: "Set up GitHub Pages"
         uses: actions/configure-pages@v6
       - name: "Prepare site"
-        run: mkdir dist && cp index.html syntax-demon.css syntax-demon.js dist/
+        run: mkdir dist && cp index.html syntaxp.css syntaxp.js dist/
       - name: "Upload build artifact"
         uses: actions/upload-pages-artifact@v5
         with:

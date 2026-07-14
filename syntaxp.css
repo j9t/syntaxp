@@ -1,0 +1,157 @@
+/* syntaxp: Token Styles */
+
+:root {
+
+	--s5p-background: #f5f5f7;
+
+	--s5p-keyword: #7c3aed;
+
+	/* #107636 */
+	--s5p-string: #107636;
+	--s5p-flag: #107636;
+
+	/* #195aea */
+	--s5p-function: #195aea;
+	--s5p-property: #195aea;
+	--s5p-command: #195aea;
+
+	/* #c82020 */
+	--s5p-tag: #c82020;
+	--s5p-selector: #c82020;
+
+	/* #b24309 */
+	--s5p-number: #b24309;
+	--s5p-entity: #b24309;
+
+	/* #9b5504 */
+	--s5p-attribute: #9b5504;
+	--s5p-path: #9b5504;
+
+	--s5p-operator: #06708a;
+
+	--s5p-builtin: #c22068;
+
+	--s5p-variable: #1f2937;
+
+	/* #616774 */
+	--s5p-comment: #616774;
+	--s5p-punctuation: #616774;
+	--s5p-doctype: #616774;
+
+}
+
+@media (prefers-color-scheme: dark) {
+
+	:root {
+
+		--s5p-background: #1e1e2e;
+
+		--s5p-keyword: #cba6f7;
+
+		/* #a6e3a1 */
+		--s5p-string: #a6e3a1;
+		--s5p-flag: #a6e3a1;
+
+		/* #89b4fa */
+		--s5p-function: #89b4fa;
+		--s5p-property: #89b4fa;
+		--s5p-command: #89b4fa;
+
+		/* #f38ba8 */
+		--s5p-tag: #f38ba8;
+		--s5p-selector: #f38ba8;
+
+		/* #fab387 */
+		--s5p-number: #fab387;
+		--s5p-entity: #fab387;
+
+		/* #f9e2af */
+		--s5p-attribute: #f9e2af;
+		--s5p-path: #f9e2af;
+
+		--s5p-operator: #89dceb;
+
+		--s5p-builtin: #f5c2e7;
+
+		--s5p-variable: #cdd6f4;
+
+		/* #8c91a6 */
+		--s5p-comment: #8c91a6;
+		--s5p-punctuation: #8c91a6;
+		--s5p-doctype: #8c91a6;
+
+	}
+
+}
+
+::highlight(keyword) {
+	color: var(--s5p-keyword);
+}
+
+::highlight(string) {
+	color: var(--s5p-string);
+}
+
+::highlight(comment) {
+	color: var(--s5p-comment);
+}
+
+::highlight(number) {
+	color: var(--s5p-number);
+}
+
+::highlight(function) {
+	color: var(--s5p-function);
+}
+
+::highlight(operator) {
+	color: var(--s5p-operator);
+}
+
+::highlight(tag) {
+	color: var(--s5p-tag);
+}
+
+::highlight(attribute) {
+	color: var(--s5p-attribute);
+}
+
+::highlight(punctuation) {
+	color: var(--s5p-punctuation);
+}
+
+::highlight(property) {
+	color: var(--s5p-property);
+}
+
+::highlight(selector) {
+	color: var(--s5p-selector);
+}
+
+::highlight(builtin) {
+	color: var(--s5p-builtin);
+}
+
+::highlight(doctype) {
+	color: var(--s5p-doctype);
+}
+
+::highlight(entity) {
+	color: var(--s5p-entity);
+}
+
+::highlight(variable) {
+	color: var(--s5p-variable);
+}
+
+::highlight(flag) {
+	color: var(--s5p-flag);
+}
+
+::highlight(path) {
+	color: var(--s5p-path);
+}
+
+::highlight(command) {
+	color: var(--s5p-command);
+}

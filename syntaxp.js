@@ -1,5 +1,5 @@
 /**
- * Syntax Demon: Code Highlighting via the CSS Custom Highlight API.
+ * syntaxp: Code Highlighting via the CSS Custom Highlight API.
  * Zero-dependency syntax highlighting. No `<span>` elements, no DOM manipulation.
  * Falls back gracefully in unsupported browsers.
  */
@@ -11,13 +11,13 @@
     return;
   }
 
-  // Replaced with the actual contents of syntax-demon.css at build time (see
-  // scripts/build.mjs), so dist/syntax-demon.js is a single self-hosted file.
+  // Replaced with the actual contents of syntaxp.css at build time (see
+  // scripts/build.mjs), so dist/syntaxp.js is a single self-hosted file.
   // Left as a placeholder here; the source setup (see index.html) loads
-  // syntax-demon.css separately instead.
-  const CSS_EMBEDDED = '/*__SYNTAX_DEMON_CSS_PLACEHOLDER__*/';
+  // syntaxp.css separately instead.
+  const CSS_EMBEDDED = '/*__SYNTAXP_CSS_PLACEHOLDER__*/';
 
-  if (!CSS_EMBEDDED.includes('__SYNTAX_DEMON_CSS_PLACEHOLDER__')) {
+  if (!CSS_EMBEDDED.includes('__SYNTAXP_CSS_PLACEHOLDER__')) {
     const style = document.createElement('style');
     // Propagates this script’s own CSP nonce (if any) to the `style` element,
     // so a nonce-based Content Security Policy covers it automatically
@@ -252,5 +252,5 @@
   }
 
   // Expose for manual use (e.g., re-highlighting after dynamic content changes)
-  window.SyntaxDemon = { highlightAll };
+  window.syntaxp = { highlightAll };
 })();

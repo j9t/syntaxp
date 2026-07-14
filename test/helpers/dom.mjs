@@ -1,10 +1,10 @@
-// A minimal fake of the browser APIs syntax-demon.js touches (CSS Custom
+// A minimal fake of the browser APIs syntaxp.js touches (CSS Custom
 // Highlight API, a handful of DOM methods), just enough to run the real
 // script in Node via vm and inspect what it did.
 
 import vm from 'node:vm';
 
-export function runSyntaxDemon(jsSource, { codeSamples = [], currentScriptNonce } = {}) {
+export function runSyntaxp(jsSource, { codeSamples = [], currentScriptNonce } = {}) {
   const elements = codeSamples.map(({ className, text }) => ({
     className,
     firstChild: { nodeType: 3, textContent: text }
@@ -64,7 +64,7 @@ export function runSyntaxDemon(jsSource, { codeSamples = [], currentScriptNonce 
   return { styleElements, highlightsByType, window: sandbox.window, listeners };
 }
 
-// Flattens the {type -> StaticRange[]} map from one `runSyntaxDemon` call
+// Flattens the {type -> StaticRange[]} map from one `runSyntaxp` call
 // into a single array of {type, text} tokens, in source order, given the
 // source text they were tokenized from.
 export function tokensFor(text, highlightsByType) {
@@ -86,8 +86,8 @@ export function tokensFor(text, highlightsByType) {
 // both language classes—used to verify aliases behave identically without
 // reaching into the module’s private `languages` table.
 export function sameHighlighting(jsSource, text, classNameA, classNameB) {
-  const a = runSyntaxDemon(jsSource, { codeSamples: [{ className: classNameA, text }] });
-  const b = runSyntaxDemon(jsSource, { codeSamples: [{ className: classNameB, text }] });
+  const a = runSyntaxp(jsSource, { codeSamples: [{ className: classNameA, text }] });
+  const b = runSyntaxp(jsSource, { codeSamples: [{ className: classNameB, text }] });
   const tokensA = tokensFor(text, a.highlightsByType);
   const tokensB = tokensFor(text, b.highlightsByType);
   return JSON.stringify(tokensA) === JSON.stringify(tokensB);

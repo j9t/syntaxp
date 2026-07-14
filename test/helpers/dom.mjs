@@ -1,12 +1,18 @@
 // A minimal fake of the browser APIs syntaxp.js touches (CSS Custom
 // Highlight API, a handful of DOM methods), just enough to run the real
-// script in Node via vm and inspect what it did.
+// script in Node via vm and inspect what it did
 
 import vm from 'node:vm';
 
-export function runSyntaxp(jsSource, { codeSamples = [], currentScriptNonce } = {}) {
+export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], currentScriptNonce, autodetect } = {}) {
   const elements = codeSamples.map(({ className, text }) => ({
     className,
+    firstChild: { nodeType: 3, textContent: text }
+  }));
+
+  // Unclassed `pre > code` elements, only read by `highlightAll` when
+  // `data-autodetect` is set
+  const autoElements = autoSamples.map(({ text }) => ({
     firstChild: { nodeType: 3, textContent: text }
   }));
 
@@ -27,7 +33,12 @@ export function runSyntaxp(jsSource, { codeSamples = [], currentScriptNonce } = 
     },
     document: {
       readyState: 'complete',
-      currentScript: currentScriptNonce ? { nonce: currentScriptNonce } : null,
+      currentScript: (currentScriptNonce || autodetect) ? {
+        nonce: currentScriptNonce,
+        hasAttribute(name) {
+          return Boolean(autodetect) && name === 'data-autodetect';
+        }
+      } : null,
       head: {
         appendChild(el) {
           styleElements.push(el);
@@ -37,7 +48,13 @@ export function runSyntaxp(jsSource, { codeSamples = [], currentScriptNonce } = 
         return { tagName: tag, textContent: '', nonce: '' };
       },
       querySelectorAll(selector) {
-        return selector.includes('language-') ? elements : [];
+        if (selector === 'code[class*="language-"]') {
+          return elements;
+        }
+        if (selector === 'pre > code:not([class*="language-"])') {
+          return autoElements;
+        }
+        return [];
       },
       addEventListener(name, fn) {
         listeners[name] = fn;
@@ -64,9 +81,9 @@ export function runSyntaxp(jsSource, { codeSamples = [], currentScriptNonce } = 
   return { styleElements, highlightsByType, window: sandbox.window, listeners };
 }
 
-// Flattens the {type -> StaticRange[]} map from one `runSyntaxp` call
+// Flattens the `{type -> StaticRange[]}` map from one `runSyntaxp` call
 // into a single array of {type, text} tokens, in source order, given the
-// source text they were tokenized from.
+// source text they were tokenized from
 export function tokensFor(text, highlightsByType) {
   const tokens = [];
   for (const [type, ranges] of highlightsByType) {
@@ -82,9 +99,9 @@ export function tokensFor(text, highlightsByType) {
   return tokens.map(({ type, text }) => ({ type, text }));
 }
 
-// True if `text` produces the exact same `{type, text}` token sequence under
+// “True” if `text` produces the exact same `{type, text}` token sequence under
 // both language classes—used to verify aliases behave identically without
-// reaching into the module’s private `languages` table.
+// reaching into the module’s private `languages` table
 export function sameHighlighting(jsSource, text, classNameA, classNameB) {
   const a = runSyntaxp(jsSource, { codeSamples: [{ className: classNameA, text }] });
   const b = runSyntaxp(jsSource, { codeSamples: [{ className: classNameB, text }] });

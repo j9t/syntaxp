@@ -1,7 +1,7 @@
 // Runs the real scripts/build.mjs, redirected (via SYNTAXP_DIST_DIR) to
 // a throwaway temp directory instead of the repo’s own dist/, so this can
-// run concurrently with other test files (e.g. inject.test.mjs, which reads
-// the repo`s real dist/) without racing over the same output directory.
+// run concurrently with other test files (e.g., inject.test.mjs, which reads
+// the repo`s real dist/) without racing over the same output directory
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';

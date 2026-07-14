@@ -242,5 +242,26 @@ index 1a2b3c4..5d6e7f8 100644
 +  json: [ … ],
    js: [ … ]
  };</code></pre>
+<h2>HTTP</h2>
+<pre><code class=language-http>GET /api/users/42 HTTP/1.1
+Host: example.com
+Authorization: Bearer abc123
+Accept: application/json
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{"id": 42, "name": "Ada"}</code></pre>
+<h2>Apache Configuration</h2>
+<pre><code class=language-apacheconf># Redirect to HTTPS and compress text assets
+&lt;IfModule mod_rewrite.c&gt;
+	RewriteEngine On
+	RewriteCond %{HTTPS} off
+	RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+&lt;/IfModule&gt;
+
+Header always set X-Content-Type-Options "nosniff"
+AddOutputFilterByType DEFLATE text/html text/css application/javascript</code></pre>
 <h2>Inline code</h2>
 <p>“Use <code class=language-js>console.log("hello")</code> for debugging”, “enter <code class=language-shell>npm install</code> to install.”

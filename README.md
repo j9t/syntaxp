@@ -1,6 +1,6 @@
-# syntaxp Syntax Painter
+# syntaxp Syntax Highlighter
 
-syntaxp provides code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/css-highlight-api-1/). Zero runtime dependencies. No extra elements in the DOM.
+syntaxp—“syntax paint”—provides code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/css-highlight-api-1/). Zero runtime dependencies. No extra elements in the DOM.
 
 ## How It Works
 
@@ -12,7 +12,7 @@ syntaxp provides code highlighting via the [CSS Custom Highlight API](https://dr
 
 ## Usage
 
-Add [the syntaxp script (~11 KB minified)](https://github.com/j9t/syntaxp/releases) to your site or page (for privacy and performance reasons, _you_ decide on hosting):
+Add [the syntaxp script (~15 KB minified)](https://github.com/j9t/syntaxp/releases) to your site or page (for privacy and performance reasons, _you_ decide on hosting):
 
 ```html
 <script src=/path/to/syntaxp.js defer></script>
@@ -63,22 +63,27 @@ The style sheet injected by syntaxp is a `<style>` element, which, if you run a 
 
 * **Don’t want to touch your CSP?** Reach out about any pain points you may have, so that I can look into additional options. In the worst case, copy and host syntaxp.css yourself.
 
+### Updating
+
+Given syntaxp’s ownership-minded approach (self-hosting for privacy and performance reasons), there is no automatic update process. Each script file ships with a version comment (e.g., `/*! syntaxp 2.1.0, https://github.com/j9t/syntaxp */`) that you can use to compare with [the latest release](https://github.com/j9t/syntaxp/releases). (If using a Content Security Policy, [take note on CSP management](#content-security-policy-management).)
+
 ## Supported Languages
 
-* `language-html`/`language-xml`
-* `language-css`
-* `language-js`
-* `language-ts`
-* `language-shell` (alias: `language-bash`)
-* `language-markdown` (alias: `language-md`)
-* `language-json`
-* `language-yaml`
-* `language-sql`
-* `language-php`
-* `language-python` (alias: `language-py`)
-* `language-diff` (alias: `language-patch`)
-* `language-http`
-* `language-apacheconf`
+* HTML (`language-html`)
+* XML (`language-xml`)
+* CSS (`language-css`)
+* JavaScript (`language-js`)
+* TypeScript (`language-ts`)
+* Shell (`language-shell`; alias: `language-bash`)
+* Markdown (`language-markdown`; alias: `language-md`)
+* JSON (`language-json`)
+* YAML (`language-yaml`)
+* SQL (`language-sql`)
+* PHP (`language-php`)
+* Python (`language-python`; alias: `language-py`)
+* Diff (`language-diff`; alias: `language-patch`)
+* HTTP (`language-http`)
+* Apache configuration (`language-apacheconf`)
 
 Do you miss an important language or alias? Contributions are welcome!
 

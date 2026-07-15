@@ -42,7 +42,7 @@ test('`data-theme=light` strips the dark-mode block entirely', () => {
   const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
   const { styleElements } = runSyntaxp(jsSource, { theme: 'light' });
   assert.doesNotMatch(styleElements[0].textContent, /prefers-color-scheme/);
-  // Light values (the base :root block) remain intact
+  // Light values (the base `:root` block) remain intact
   assert.match(styleElements[0].textContent, /--s5p-background: #f5f5f7/);
 });
 

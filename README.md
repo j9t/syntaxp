@@ -53,13 +53,25 @@ For older content with code blocks not using `language-*` classes, add `data-aut
 
 With this set, syntaxp also guesses a language for any `pre > code` element that has no `language-*` class, using the same tokenizers as regular highlighting, and skips elements it isn’t reasonably confident about (left as plain code, same graceful fallback as an unsupported browser). This is a heuristic, not real language detection, so expect the occasional miss—tagging code blocks with an explicit `class=language-x` is the most reliable option and is unaffected by this setting either way. (The option is off by default, since a wrong guess is a worse outcome than no highlighting.)
 
+### Forcing a Color Scheme (Opt-In)
+
+By default, syntaxp’s token colors follow the visitor’s OS/browser `prefers-color-scheme` setting on their own, regardless of whether the host page itself renders in both light and dark mode. On a site that only ever renders in one mode, that’s a mismatch: a light-only page’s code colors will shift to the dark palette (tuned for a dark background) whenever a visitor’s OS is set to dark, and the reverse for a dark-only page.
+
+If that applies to your site, add `data-theme=light` or `data-theme=dark` to the script element to pin the palette instead of following the OS setting:
+
+```html
+<script src=/path/to/syntaxp.js defer data-theme=light></script>
+```
+
+Any other value, or the attribute being absent, leaves the default OS-driven behavior in place.
+
 ### Content Security Policy Management
 
 The style sheet injected by syntaxp is a `<style>` element, which, if you run a Content Security Policy, is governed by your `style-src` policy (specifically `style-src-elem`, if set). This may require one of the following:
 
 * **Nonce-based CSP:** Add a `nonce` attribute to the `<script src=syntaxp.js>` element, same as you would for any other script under a nonce-based policy. The library automatically reads its own script’s nonce via `document.currentScript.nonce` and applies it to the `<style>` element it creates—no separate configuration needed.
 
-* **Host-based CSP without nonces** (e.g., just `style-src 'self'`, no `'unsafe-inline'`): add a hash source instead—`style-src 'sha256-…'`. Every syntaxp release also publishes the correct hash as a .hash file—syntaxp.js.hash for syntaxp.js, syntaxp.min.js.hash for syntaxp.min.js—on the [releases page](https://github.com/j9t/syntaxp/releases). Copy the value matching whichever file you self-host (the two differ, since minification changes the exact bytes) into your `style-src` directive. Since the embedded CSS is versioned and immutable per release, that hash only needs updating when you deliberately upgrade to a release whose CSS actually changed—not on every upgrade, and never silently.
+* **Host-based CSP without nonces** (e.g., just `style-src 'self'`, no `'unsafe-inline'`): add a hash source instead—`style-src 'sha256-…'`. Every syntaxp release also publishes the correct hash as a .hash file—syntaxp.js.hash for syntaxp.js, syntaxp.min.js.hash for syntaxp.min.js—on the [releases page](https://github.com/j9t/syntaxp/releases). Copy the value matching whichever file you self-host (the two differ, since minification changes the exact bytes) into your `style-src` directive. Since the embedded CSS is versioned and immutable per release, that hash only needs updating when you deliberately upgrade to a release whose CSS actually changed—not on every upgrade, and never silently. **Exception:** if you also use `data-theme` (above), the injected `<style>` content is no longer byte-identical to the release build—the published `.hash` won’t match, and a host-based CSP will block it. Either compute your own hash for the actual injected content, or use a nonce-based policy instead when combining `data-theme` with a host-based CSP.
 
 * **Don’t want to touch your CSP?** Reach out about any pain points you may have, so that I can look into additional options. In the worst case, copy and host syntaxp.css yourself.
 

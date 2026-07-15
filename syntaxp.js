@@ -22,6 +22,33 @@
   // syntaxp.css separately instead.
   const CSS_EMBEDDED = '/*__SYNTAXP_CSS_PLACEHOLDER__*/';
 
+  // Matches the embedded CSS’s dark-mode block regardless of formatting
+  // since neither form nests further braces inside it (custom property
+  // declarations only, no rules)
+  const DARK_QUERY = /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/;
+  const DARK_BLOCK = new RegExp(`${DARK_QUERY.source}\\s*\\{[^{}]*\\{[^{}]*\\}\\s*\\}`);
+
+  // Applies a `data-theme=light|dark` override to the embedded CSS before
+  // it’s injected. By default, syntaxp’s token colors follow the
+  // visitor’s OS `prefers-color-scheme`, independent of whether the host
+  // page itself renders in both modes—a mismatch on single-mode sites
+  // (e.g., a light-only page whose code colors shift to the dark palette,
+  // tuned for a dark background, whenever a visitor’s OS is set to dark).
+  // `light` drops the dark block outright, so the base (light) values can
+  // never be overridden. `dark` keeps the block but swaps its condition for
+  // one that’s always true, so its values apply unconditionally instead of
+  // the base ones. Any other value—including the attribute being absent—
+  // leaves the CSS untouched.
+  function applyThemeOverride(css, theme) {
+    if (theme === 'light') {
+      return css.replace(DARK_BLOCK, '');
+    }
+    if (theme === 'dark') {
+      return css.replace(DARK_QUERY, '@media all');
+    }
+    return css;
+  }
+
   if (!CSS_EMBEDDED.includes('__SYNTAXP_CSS_PLACEHOLDER__')) {
     const style = document.createElement('style');
     // Propagates this script’s own CSP nonce (if any) to the `style` element,
@@ -30,7 +57,8 @@
     if (nonce) {
       style.nonce = nonce;
     }
-    style.textContent = CSS_EMBEDDED;
+    const theme = currentScript && currentScript.getAttribute('data-theme');
+    style.textContent = applyThemeOverride(CSS_EMBEDDED, theme);
     document.head.appendChild(style);
   }
 

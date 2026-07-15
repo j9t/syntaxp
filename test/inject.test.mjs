@@ -37,3 +37,47 @@ test('does not set a nonce when the host script has none', () => {
   const { styleElements } = runSyntaxp(jsSource);
   assert.equal(styleElements[0].nonce, '');
 });
+
+test('`data-theme=light` strips the dark-mode block entirely', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { theme: 'light' });
+  assert.doesNotMatch(styleElements[0].textContent, /prefers-color-scheme/);
+  // Light values (the base :root block) remain intact
+  assert.match(styleElements[0].textContent, /--s5p-background: #f5f5f7/);
+});
+
+test('`data-theme=light` also works on the minified build', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.min.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { theme: 'light' });
+  assert.doesNotMatch(styleElements[0].textContent, /prefers-color-scheme/);
+});
+
+test('`data-theme=dark` forces the dark-mode block to always apply', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { theme: 'dark' });
+  const css = styleElements[0].textContent;
+  assert.doesNotMatch(css, /prefers-color-scheme/);
+  assert.match(css, /@media all\s*\{/);
+  // The dark values are still present, now under the always-true query
+  assert.match(css, /--s5p-background: #1e1e2e/);
+});
+
+test('`data-theme=dark` also works on the minified build', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.min.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { theme: 'dark' });
+  const css = styleElements[0].textContent;
+  assert.doesNotMatch(css, /prefers-color-scheme/);
+  assert.match(css, /@media all\{/);
+});
+
+test('an unrecognized `data-theme` value leaves the CSS untouched', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { theme: 'sepia' });
+  assert.match(styleElements[0].textContent, /prefers-color-scheme/);
+});
+
+test('no `data-theme` attribute leaves the CSS untouched (default OS-driven behavior)', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource);
+  assert.match(styleElements[0].textContent, /prefers-color-scheme/);
+});

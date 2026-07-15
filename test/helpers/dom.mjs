@@ -4,7 +4,7 @@
 
 import vm from 'node:vm';
 
-export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], currentScriptNonce, autodetect } = {}) {
+export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], currentScriptNonce, autodetect, theme } = {}) {
   const elements = codeSamples.map(({ className, text }) => ({
     className,
     firstChild: { nodeType: 3, textContent: text }
@@ -33,10 +33,13 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
     },
     document: {
       readyState: 'complete',
-      currentScript: (currentScriptNonce || autodetect) ? {
+      currentScript: (currentScriptNonce || autodetect || theme) ? {
         nonce: currentScriptNonce,
         hasAttribute(name) {
           return Boolean(autodetect) && name === 'data-autodetect';
+        },
+        getAttribute(name) {
+          return name === 'data-theme' ? (theme || null) : null;
         }
       } : null,
       head: {

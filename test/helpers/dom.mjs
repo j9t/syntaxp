@@ -4,7 +4,7 @@
 
 import vm from 'node:vm';
 
-export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], currentScriptNonce, autodetect, theme } = {}) {
+export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], currentScriptNonce, autodetect, theme, colorScheme } = {}) {
   const elements = codeSamples.map(({ className, text }) => ({
     className,
     firstChild: { nodeType: 3, textContent: text }
@@ -31,8 +31,12 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
         }
       }
     },
+    getComputedStyle(element) {
+      return { colorScheme: colorScheme || '' };
+    },
     document: {
       readyState: 'complete',
+      documentElement: {},
       currentScript: (currentScriptNonce || autodetect || theme) ? {
         nonce: currentScriptNonce,
         hasAttribute(name) {

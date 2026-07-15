@@ -49,6 +49,25 @@
     return css;
   }
 
+  // Falls back to the page’s own `color-scheme` when `data-theme` isn’t
+  // set, but only acts on it when the page unambiguously declares a single
+  // mode (`color-scheme: light` or `color-scheme: dark` alone)—the one
+  // standardized, spec-defined signal for “this page only renders in one
+  // mode.” `color-scheme: light dark` (both) or the unset default
+  // (`normal`) both leave this returning `null`, since neither tells us
+  // anything: `normal` in particular can’t be told apart from a page that
+  // supports dark entirely through undeclared `prefers-color-scheme` media
+  // queries in its CSS—the common pattern—so guessing there would be as
+  // likely to be wrong as right. Pages in that position still need an
+  // explicit `data-theme`.
+  function detectPageTheme() {
+    if (typeof getComputedStyle !== 'function' || !document.documentElement) {
+      return null;
+    }
+    const colorScheme = getComputedStyle(document.documentElement).colorScheme;
+    return (colorScheme === 'light' || colorScheme === 'dark') ? colorScheme : null;
+  }
+
   if (!CSS_EMBEDDED.includes('__SYNTAXP_CSS_PLACEHOLDER__')) {
     const style = document.createElement('style');
     // Propagates this script’s own CSP nonce (if any) to the `style` element,
@@ -57,7 +76,8 @@
     if (nonce) {
       style.nonce = nonce;
     }
-    const theme = currentScript && currentScript.getAttribute('data-theme');
+    // An explicit `data-theme` always wins over the auto-detected one
+    const theme = (currentScript && currentScript.getAttribute('data-theme')) || detectPageTheme();
     style.textContent = applyThemeOverride(CSS_EMBEDDED, theme);
     document.head.appendChild(style);
   }

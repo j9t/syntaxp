@@ -81,3 +81,38 @@ test('no `data-theme` attribute leaves the CSS untouched (default OS-driven beha
   const { styleElements } = runSyntaxp(jsSource);
   assert.match(styleElements[0].textContent, /prefers-color-scheme/);
 });
+
+test('auto-detects `color-scheme: light` on the page when `data-theme` is absent', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { colorScheme: 'light' });
+  assert.doesNotMatch(styleElements[0].textContent, /prefers-color-scheme/);
+  assert.match(styleElements[0].textContent, /--s5p-background: #f5f5f7/);
+});
+
+test('auto-detects `color-scheme: dark` on the page when `data-theme` is absent', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { colorScheme: 'dark' });
+  const css = styleElements[0].textContent;
+  assert.doesNotMatch(css, /prefers-color-scheme/);
+  assert.match(css, /@media all\s*\{/);
+});
+
+test('does not act on `color-scheme: light dark` (page supports both, defers to OS)', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { colorScheme: 'light dark' });
+  assert.match(styleElements[0].textContent, /prefers-color-scheme/);
+});
+
+test('does not act on the unset/`normal` color-scheme default', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { colorScheme: 'normal' });
+  assert.match(styleElements[0].textContent, /prefers-color-scheme/);
+});
+
+test('an explicit `data-theme` overrides a conflicting auto-detected page color-scheme', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { theme: 'dark', colorScheme: 'light' });
+  const css = styleElements[0].textContent;
+  assert.doesNotMatch(css, /prefers-color-scheme/);
+  assert.match(css, /@media all\s*\{/);
+});

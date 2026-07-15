@@ -53,17 +53,19 @@ For older content with code blocks not using `language-*` classes, add `data-aut
 
 With this set, syntaxp also guesses a language for any `pre > code` element that has no `language-*` class, using the same tokenizers as regular highlighting, and skips elements it isn’t reasonably confident about (left as plain code, same graceful fallback as an unsupported browser). This is a heuristic, not real language detection, so expect the occasional miss—tagging code blocks with an explicit `class=language-x` is the most reliable option and is unaffected by this setting either way. (The option is off by default, since a wrong guess is a worse outcome than no highlighting.)
 
-### Forcing a Color Scheme (Opt-In)
+### Forcing a Color Scheme
 
-By default, syntaxp’s token colors follow the visitor’s OS/browser `prefers-color-scheme` setting on their own, regardless of whether the host page itself renders in both light and dark mode. On a site that only ever renders in one mode, that’s a mismatch: a light-only page’s code colors will shift to the dark palette (tuned for a dark background) whenever a visitor’s OS is set to dark, and the reverse for a dark-only page.
+By default, syntaxp’s token colors follow the visitor’s OS/browser `prefers-color-scheme` setting on their own. However, this happens regardless of whether the host page itself renders in both light and dark mode. On a site that only renders in one mode, that’s a mismatch: A light-only page’s code colors will shift to the dark palette (tuned for a dark background) whenever a visitor’s OS is set to dark, and the reverse for a dark-only page.
 
-If that applies to your site, add `data-theme=light` or `data-theme=dark` to the script element to pin the palette instead of following the OS setting:
+**Automatic, no setup needed:** If the page declares a light _or_ dark [`color-scheme`](https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme) on `:root`/`html`, syntaxp picks that up on its own and pins its palette to match. This only fires on that one unambiguous, standardized signal—`color-scheme: light dark`, or the property being unset entirely (its default), both leave the OS-driven behavior in place, since neither actually tells syntaxp whether the page is single-mode. In particular, a page that supports dark mode purely through its own `prefers-color-scheme` media queries, without ever setting `color-scheme`, looks identical, script-wise, to a page that didn’t think about dark mode; syntaxp can’t tell those two apart.
+
+**Manual override, for everything else:** If your page doesn’t or can’t declare `color-scheme`, add `data-theme=light` or `data-theme=dark` to the script element instead:
 
 ```html
 <script src=/path/to/syntaxp.js defer data-theme=light></script>
 ```
 
-Any other value, or the attribute being absent, leaves the default OS-driven behavior in place.
+`data-theme`, when present with a recognized value, always wins over the auto-detected page color-scheme. Any other value, or the attribute being absent (with no usable `color-scheme` on the page either), leaves the default OS-driven behavior in place.
 
 ### Content Security Policy Management
 

@@ -71,9 +71,9 @@ By default, syntaxp’s token colors follow the visitor’s OS/browser `prefers-
 
 The style sheet injected by syntaxp is a `<style>` element, which, if you run a Content Security Policy, is governed by your `style-src` policy (specifically `style-src-elem`, if set). This may require one of the following:
 
-* **Nonce-based CSP:** Add a `nonce` attribute to the `<script src=syntaxp.js>` element, same as you would for any other script under a nonce-based policy. The library automatically reads its own script’s nonce via `document.currentScript.nonce` and applies it to the `<style>` element it creates—no separate configuration needed.
+* **Nonce-based CSP:** Add a `nonce` attribute to the `<script src=syntaxp.js>` element, same as you would for any other script under a nonce-based policy. The library automatically reads its own script’s nonce via `document.currentScript.nonce` and applies it to the `<style>` element it creates. This only covers the library’s own side, though: Your CSP header still needs to authorize that same nonce value under `style-src` (or `style-src-elem`), not just `script-src`—the usual case if you generate one nonce per request and reuse it across both directives, but worth checking if your policy issues separate nonces per directive.
 
-* **Host-based CSP without nonces** (e.g., just `style-src 'self'`, no `'unsafe-inline'`): add a hash source instead—`style-src 'sha256-…'`. Every syntaxp release also publishes the correct hash as a .hash file—syntaxp.js.hash for syntaxp.js, syntaxp.min.js.hash for syntaxp.min.js—on the [releases page](https://github.com/j9t/syntaxp/releases). Copy the value matching whichever file you self-host (the two differ, since minification changes the exact bytes) into your `style-src` directive. Since the embedded CSS is versioned and immutable per release, that hash only needs updating when you deliberately upgrade to a release whose CSS actually changed—not on every upgrade, and never silently. **Exception:** if you also use `data-theme` (above), the injected `<style>` content is no longer byte-identical to the release build—the published `.hash` won’t match, and a host-based CSP will block it. Either compute your own hash for the actual injected content, or use a nonce-based policy instead when combining `data-theme` with a host-based CSP.
+* **Host-based CSP without nonces** (e.g., just `style-src 'self'`, no `'unsafe-inline'`): add a hash source instead—`style-src 'sha256-…'`. Every syntaxp release publishes three .hash files for `syntaxp.min.js` on the [releases page](https://github.com/j9t/syntaxp/releases), one per possible injected result: `syntaxp.min.js.hash` (no theme override), `syntaxp.min.js.light.hash` (`data-theme=light`, or a page whose own `color-scheme` auto-detects as light), and `syntaxp.min.js.dark.hash` (the same for dark). Copy whichever one matches your actual configuration into your `style-src` directive—no computation needed, even with a theme override in effect. Since the embedded CSS is versioned and immutable per release, that hash only needs updating when you deliberately upgrade to a release whose CSS actually changed—not on every upgrade, and never silently. Only `syntaxp.min.js` gets published hashes; self-hosting the unminified `syntaxp.js` build (meant for reading/auditing, not typical production hosting) under a host-based hash CSP means computing your own.
 
 * **Don’t want to touch your CSP?** Reach out about any pain points you may have, so that I can look into additional options. In the worst case, copy and host syntaxp.css yourself.
 
@@ -132,7 +132,7 @@ Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 `syntaxp.css` and `syntaxp.js` are the source of truth and have no build step of their own—the tooling below only produces version-stamped release files in `dist/`, and is a dev-time dependency only. Run `npm install` once to fetch it and set up a pre-commit hook that runs the contrast check whenever `syntaxp.css` is staged.
 
 * `npm run check-contrast`: Check every token color against its palette’s `--s5p-background` (also runs automatically before each commit that touches `syntaxp.css`)
-* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus a `.hash` file next to each containing its `style-src` hash-source (see [note on Content Security Policies](#content-security-policy-management))
+* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus three `.hash` files for `syntaxp.min.js` (default, `data-theme=light`, `data-theme=dark`) containing their `style-src` hash-sources (see [note on Content Security Policies](#content-security-policy-management))
 * `npm test`: Run the test suite
 
 ### Releasing
@@ -141,6 +141,6 @@ Version is tracked in `package.json`, not tagged manually. To issue a release, b
 
 1. checks contrast and builds `dist/`,
 2. tags the commit `vX.Y.Z`, and
-3. publishes a GitHub release with the built files (`syntaxp.js`, `syntaxp.min.js`, and their `.hash` files) attached.
+3. publishes a GitHub release with the built files (`syntaxp.js`, `syntaxp.min.js`, and `syntaxp.min.js`’s three `.hash` files) attached.
 
 Pushing to `main` without a `package.json` version change is a no-op—no tag or release is created.

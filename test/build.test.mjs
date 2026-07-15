@@ -35,13 +35,14 @@ test('build script exits cleanly', () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
-test('dist contains exactly the four expected files', () => {
+test('dist contains exactly the five expected files', () => {
   const files = readdirSync(dirDist).sort();
   assert.deepEqual(files, [
     'syntaxp.js',
-    'syntaxp.js.hash',
     'syntaxp.min.js',
-    'syntaxp.min.js.hash'
+    'syntaxp.min.js.dark.hash',
+    'syntaxp.min.js.hash',
+    'syntaxp.min.js.light.hash'
   ]);
 });
 
@@ -76,13 +77,22 @@ test('both dist files carry the version banner', () => {
   }
 });
 
-test('published .hash exactly matches the hash of what actually gets injected at runtime', () => {
-  for (const name of ['syntaxp.js', 'syntaxp.min.js']) {
-    const jsSource = readFileSync(`${dirDist}/${name}`, 'utf8');
-    const { styleElements } = runSyntaxp(jsSource);
+test('published syntaxp.min.js.hash exactly matches the hash of what actually gets injected at runtime', () => {
+  const jsSource = readFileSync(`${dirDist}/syntaxp.min.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource);
+  const injectedCss = styleElements[0].textContent;
+  const expected = `'sha256-${createHash('sha256').update(injectedCss, 'utf8').digest('base64')}'`;
+  const published = readFileSync(`${dirDist}/syntaxp.min.js.hash`, 'utf8').trim();
+  assert.equal(published, expected, 'syntaxp.min.js.hash does not match the injected style’s actual hash');
+});
+
+test('published .light.hash/.dark.hash exactly match what actually gets injected under each theme override', () => {
+  const jsSource = readFileSync(`${dirDist}/syntaxp.min.js`, 'utf8');
+  for (const theme of ['light', 'dark']) {
+    const { styleElements } = runSyntaxp(jsSource, { theme });
     const injectedCss = styleElements[0].textContent;
     const expected = `'sha256-${createHash('sha256').update(injectedCss, 'utf8').digest('base64')}'`;
-    const published = readFileSync(`${dirDist}/${name}.hash`, 'utf8').trim();
-    assert.equal(published, expected, `${name}.hash does not match the injected style’s actual hash`);
+    const published = readFileSync(`${dirDist}/syntaxp.min.js.${theme}.hash`, 'utf8').trim();
+    assert.equal(published, expected, `syntaxp.min.js.${theme}.hash does not match the injected style’s actual hash`);
   }
 });

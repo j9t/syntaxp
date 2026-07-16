@@ -4,7 +4,7 @@
 
 import vm from 'node:vm';
 
-export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], currentScriptNonce, autodetect } = {}) {
+export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], currentScriptNonce, autodetect, theme, colorScheme } = {}) {
   const elements = codeSamples.map(({ className, text }) => ({
     className,
     firstChild: { nodeType: 3, textContent: text }
@@ -31,12 +31,28 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
         }
       }
     },
+    getComputedStyle(element) {
+      return { colorScheme: colorScheme || '' };
+    },
     document: {
       readyState: 'complete',
-      currentScript: (currentScriptNonce || autodetect) ? {
+      documentElement: {},
+      // `theme` distinguishes “attribute absent” (`undefined`, the default)
+      // from “attribute present but empty” (pass `theme: ''`) the same way
+      // a real `data-theme=""` attribute would—see `hasAttribute` below
+      currentScript: (currentScriptNonce || autodetect || theme !== undefined) ? {
         nonce: currentScriptNonce,
         hasAttribute(name) {
-          return Boolean(autodetect) && name === 'data-autodetect';
+          if (name === 'data-autodetect') {
+            return Boolean(autodetect);
+          }
+          if (name === 'data-theme') {
+            return theme !== undefined;
+          }
+          return false;
+        },
+        getAttribute(name) {
+          return name === 'data-theme' && theme !== undefined ? theme : null;
         }
       } : null,
       head: {

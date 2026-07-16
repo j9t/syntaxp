@@ -22,6 +22,52 @@
   // syntaxp.css separately instead.
   const CSS_EMBEDDED = '/*__SYNTAXP_CSS_PLACEHOLDER__*/';
 
+  // Matches the embedded CSS’s dark-mode block regardless of formatting
+  // since neither form nests further braces inside it (custom property
+  // declarations only, no rules)
+  const DARK_QUERY = /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/;
+  const DARK_BLOCK = new RegExp(`${DARK_QUERY.source}\\s*\\{[^{}]*\\{[^{}]*\\}\\s*\\}`);
+
+  // Applies a `data-theme=light|dark` override to the embedded CSS before
+  // it’s injected. By default, syntaxp’s token colors follow the
+  // visitor’s OS `prefers-color-scheme`, independent of whether the host
+  // page itself renders in both modes—a mismatch on single-mode sites
+  // (e.g., a light-only page whose code colors shift to the dark palette,
+  // tuned for a dark background, whenever a visitor’s OS is set to dark).
+  // `light` drops the dark block outright, so the base (light) values can
+  // never be overridden. `dark` keeps the block but swaps its condition for
+  // one that’s always true, so its values apply unconditionally instead of
+  // the base ones. Any other value—including the attribute being absent—
+  // leaves the CSS untouched.
+  function applyThemeOverride(css, theme) {
+    if (theme === 'light') {
+      return css.replace(DARK_BLOCK, '');
+    }
+    if (theme === 'dark') {
+      return css.replace(DARK_QUERY, '@media all');
+    }
+    return css;
+  }
+
+  // Falls back to the page’s own `color-scheme` when `data-theme` isn’t
+  // set, but only acts on it when the page unambiguously declares a single
+  // mode (`color-scheme: light` or `color-scheme: dark` alone)—the one
+  // standardized, spec-defined signal for “this page only renders in one
+  // mode.” `color-scheme: light dark` (both) or the unset default
+  // (`normal`) both leave this returning `null`, since neither tells us
+  // anything: `normal` in particular can’t be told apart from a page that
+  // supports dark entirely through undeclared `prefers-color-scheme` media
+  // queries in its CSS—the common pattern—so guessing there would be as
+  // likely to be wrong as right. Pages in that position still need an
+  // explicit `data-theme`.
+  function detectPageTheme() {
+    if (typeof getComputedStyle !== 'function' || !document.documentElement) {
+      return null;
+    }
+    const colorScheme = getComputedStyle(document.documentElement).colorScheme;
+    return (colorScheme === 'light' || colorScheme === 'dark') ? colorScheme : null;
+  }
+
   if (!CSS_EMBEDDED.includes('__SYNTAXP_CSS_PLACEHOLDER__')) {
     const style = document.createElement('style');
     // Propagates this script’s own CSP nonce (if any) to the `style` element,
@@ -30,7 +76,13 @@
     if (nonce) {
       style.nonce = nonce;
     }
-    style.textContent = CSS_EMBEDDED;
+    // An explicit `data-theme`—even present but empty/unrecognized—always
+    // wins over the auto-detected one; `hasAttribute` (not a truthiness
+    // check on the value) is what makes that hold for `data-theme=""`
+    const theme = (currentScript && currentScript.hasAttribute('data-theme'))
+      ? currentScript.getAttribute('data-theme')
+      : detectPageTheme();
+    style.textContent = applyThemeOverride(CSS_EMBEDDED, theme);
     document.head.appendChild(style);
   }
 

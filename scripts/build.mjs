@@ -13,12 +13,29 @@
 // remains the actual source of truth for styles (edit it, not the embedded
 // copy) and isn’t emitted to dist/ on its own.
 //
-// Also writes a .hash file alongside each dist JS file, containing the
-// exact `style-src` hash-source (e.g., `'sha256-…'`) for that file’s embedded
-// CSS—for sites under a host-based Content Security Policy that can’t use
-// the auto-injected <style> via a nonce; see the README’s Content Security
-// Policies section. .hash files are picked up by release.yml’s
-// `dist/*` glob and attached to the GitHub release like the JS files.
+// Also writes three .hash files for syntaxp.min.js, each containing the
+// exact `style-src` hash-source (e.g., `'sha256-…'`) for how its embedded
+// CSS looks under a given theme—for sites under a host-based Content
+// Security Policy that can’t use the auto-injected `<style>` via a nonce.
+// .hash files are picked up by release.yml’s `dist/*` glob and attached to
+// the GitHub release like the JS files.
+//
+// syntaxp.min.js.hash covers the CSS as shipped (no theme override).
+// syntaxp.min.js.light.hash and .dark.hash cover it as it looks once a
+// `data-theme` override (or its auto-detected equivalent) has stripped or
+// force-applied the dark-mode block at runtime—without these, a
+// site combining a theme override with a host-based hash CSP would have no
+// published hash that actually matches what gets injected, forcing a
+// hand-computed one. Only the minified build gets hashes at all; the
+// unminified build is meant for reading/auditing, not production hosting
+// under a hash-based CSP.
+//
+// `forceLight`/`forceDark` below mirror `applyThemeOverride`’s two regexes
+// in syntaxp.js exactly—kept as a separate copy rather than shared via
+// import so syntaxp.js stays a self-contained, dependency-free single
+// file. test/build.test.mjs cross-checks these hashes against what the
+// built script actually injects at runtime for each theme, so the two
+// copies can’t silently drift out of sync.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -27,6 +44,19 @@ import * as esbuild from 'esbuild';
 
 function cspHash(text) {
   return `'sha256-${createHash('sha256').update(text, 'utf8').digest('base64')}'`;
+}
+
+// See the file-level comment above for why these are duplicated here
+// instead of imported from syntaxp.js
+const DARK_QUERY = /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/;
+const DARK_BLOCK = new RegExp(`${DARK_QUERY.source}\\s*\\{[^{}]*\\{[^{}]*\\}\\s*\\}`);
+
+function forceLight(css) {
+  return css.replace(DARK_BLOCK, '');
+}
+
+function forceDark(css) {
+  return css.replace(DARK_QUERY, '@media all');
 }
 
 const dirRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -54,12 +84,11 @@ const stampedJs = rawJs.replace(
   `/*! syntaxp ${version}, https://github.com/j9t/syntaxp */`
 );
 
+// No .hash file for this one—see the file-level comment above
 writeFileSync(
   `${dirDist}/syntaxp.js`,
   stampedJs.replace(CSS_PLACEHOLDER, JSON.stringify(rawCss))
 );
-const hashUnminified = cspHash(rawCss);
-writeFileSync(`${dirDist}/syntaxp.js.hash`, `${hashUnminified}\n`);
 
 const { code: minifiedCss } = await esbuild.transform(rawCss, {
   loader: 'css',
@@ -74,6 +103,13 @@ writeFileSync(`${dirDist}/syntaxp.min.js`, minifiedJs);
 const hashMinified = cspHash(minifiedCss);
 writeFileSync(`${dirDist}/syntaxp.min.js.hash`, `${hashMinified}\n`);
 
+const hashMinifiedLight = cspHash(forceLight(minifiedCss));
+writeFileSync(`${dirDist}/syntaxp.min.js.light.hash`, `${hashMinifiedLight}\n`);
+
+const hashMinifiedDark = cspHash(forceDark(minifiedCss));
+writeFileSync(`${dirDist}/syntaxp.min.js.dark.hash`, `${hashMinifiedDark}\n`);
+
 console.log(`Built dist/ for v${version}`);
-console.log(`  \`style-src\` hash for syntaxp.js: ${hashUnminified}`);
 console.log(`  \`style-src\` hash for syntaxp.min.js: ${hashMinified}`);
+console.log(`  \`style-src\` hash for syntaxp.min.js (data-theme=light): ${hashMinifiedLight}`);
+console.log(`  \`style-src\` hash for syntaxp.min.js (data-theme=dark): ${hashMinifiedDark}`);

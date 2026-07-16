@@ -53,13 +53,27 @@ For older content with code blocks not using `language-*` classes, add `data-aut
 
 With this set, syntaxp also guesses a language for any `pre > code` element that has no `language-*` class, using the same tokenizers as regular highlighting, and skips elements it isn’t reasonably confident about (left as plain code, same graceful fallback as an unsupported browser). This is a heuristic, not real language detection, so expect the occasional miss—tagging code blocks with an explicit `class=language-x` is the most reliable option and is unaffected by this setting either way. (The option is off by default, since a wrong guess is a worse outcome than no highlighting.)
 
+### Forcing a Color Scheme
+
+By default, syntaxp’s token colors follow the visitor’s OS/browser `prefers-color-scheme` setting on their own. However, this happens regardless of whether the host page itself renders in both light and dark mode. On a site that only renders in one mode, that’s a mismatch: A light-only page’s code colors will shift to the dark palette (tuned for a dark background) whenever a visitor’s OS is set to dark, and the reverse for a dark-only page.
+
+**Automatic, no setup needed:** If the page declares a light _or_ dark [`color-scheme`](https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme) on `:root`/`html`, syntaxp picks that up on its own and pins its palette to match. This only fires on that one unambiguous, standardized signal—`color-scheme: light dark`, or the property being unset entirely (its default), both leave the OS-driven behavior in place, since neither actually tells syntaxp whether the page is single-mode. In particular, a page that supports dark mode purely through its own `prefers-color-scheme` media queries, without ever setting `color-scheme`, looks identical, script-wise, to a page that didn’t think about dark mode; syntaxp can’t tell those two apart.
+
+**Manual override, for everything else:** If your page doesn’t or can’t declare `color-scheme`, add `data-theme=light` or `data-theme=dark` to the script element instead:
+
+```html
+<script src=/path/to/syntaxp.js defer data-theme=light></script>
+```
+
+`data-theme`, when present with a recognized value, always wins over the auto-detected page color-scheme. Any other value, or the attribute being absent (with no usable `color-scheme` on the page either), leaves the default OS-driven behavior in place.
+
 ### Content Security Policy Management
 
 The style sheet injected by syntaxp is a `<style>` element, which, if you run a Content Security Policy, is governed by your `style-src` policy (specifically `style-src-elem`, if set). This may require one of the following:
 
-* **Nonce-based CSP:** Add a `nonce` attribute to the `<script src=syntaxp.js>` element, same as you would for any other script under a nonce-based policy. The library automatically reads its own script’s nonce via `document.currentScript.nonce` and applies it to the `<style>` element it creates—no separate configuration needed.
+* **Nonce-based CSP:** Add a `nonce` attribute to the `<script src=syntaxp.js>` element, same as you would for any other script under a nonce-based policy. The library automatically reads its own script’s nonce via `document.currentScript.nonce` and applies it to the `<style>` element it creates. This only covers the library’s own side, though: Your CSP header still needs to authorize that same nonce value under `style-src` (or `style-src-elem`), not just `script-src`—the usual case if you generate one nonce per request and reuse it across both directives, but worth checking if your policy issues separate nonces per directive.
 
-* **Host-based CSP without nonces** (e.g., just `style-src 'self'`, no `'unsafe-inline'`): add a hash source instead—`style-src 'sha256-…'`. Every syntaxp release also publishes the correct hash as a .hash file—syntaxp.js.hash for syntaxp.js, syntaxp.min.js.hash for syntaxp.min.js—on the [releases page](https://github.com/j9t/syntaxp/releases). Copy the value matching whichever file you self-host (the two differ, since minification changes the exact bytes) into your `style-src` directive. Since the embedded CSS is versioned and immutable per release, that hash only needs updating when you deliberately upgrade to a release whose CSS actually changed—not on every upgrade, and never silently.
+* **Host-based CSP without nonces** (e.g., just `style-src 'self'`, no `'unsafe-inline'`): add a hash source instead—`style-src 'sha256-…'`. Every syntaxp release publishes three .hash files for `syntaxp.min.js` on the [releases page](https://github.com/j9t/syntaxp/releases), one per possible injected result: `syntaxp.min.js.hash` (no theme override), `syntaxp.min.js.light.hash` (`data-theme=light`, or a page whose own `color-scheme` auto-detects as light), and `syntaxp.min.js.dark.hash` (the same for dark). Copy whichever one matches your actual configuration into your `style-src` directive—no computation needed, even with a theme override in effect. Since the embedded CSS is versioned and immutable per release, that hash only needs updating when you deliberately upgrade to a release whose CSS actually changed—not on every upgrade, and never silently. Only `syntaxp.min.js` gets published hashes; self-hosting the unminified `syntaxp.js` build (meant for reading/auditing, not typical production hosting) under a host-based hash CSP means computing your own.
 
 * **Don’t want to touch your CSP?** Reach out about any pain points you may have, so that I can look into additional options. In the worst case, copy and host syntaxp.css yourself.
 
@@ -118,7 +132,7 @@ Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 `syntaxp.css` and `syntaxp.js` are the source of truth and have no build step of their own—the tooling below only produces version-stamped release files in `dist/`, and is a dev-time dependency only. Run `npm install` once to fetch it and set up a pre-commit hook that runs the contrast check whenever `syntaxp.css` is staged.
 
 * `npm run check-contrast`: Check every token color against its palette’s `--s5p-background` (also runs automatically before each commit that touches `syntaxp.css`)
-* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus a `.hash` file next to each containing its `style-src` hash-source (see [note on Content Security Policies](#content-security-policy-management))
+* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus three `.hash` files for `syntaxp.min.js` (default, `data-theme=light`, `data-theme=dark`) containing their `style-src` hash-sources (see [note on Content Security Policies](#content-security-policy-management))
 * `npm test`: Run the test suite
 
 ### Releasing
@@ -127,6 +141,6 @@ Version is tracked in `package.json`, not tagged manually. To issue a release, b
 
 1. checks contrast and builds `dist/`,
 2. tags the commit `vX.Y.Z`, and
-3. publishes a GitHub release with the built files (`syntaxp.js`, `syntaxp.min.js`, and their `.hash` files) attached.
+3. publishes a GitHub release with the built files (`syntaxp.js`, `syntaxp.min.js`, and `syntaxp.min.js`’s three `.hash` files) attached.
 
 Pushing to `main` without a `package.json` version change is a no-op—no tag or release is created.

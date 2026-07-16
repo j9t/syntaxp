@@ -171,12 +171,11 @@ class UserError(Exception):
 	pass
 
 def fetch_user(user_id: int) -&gt; dict:
-	with urlopen(f"/api/users/{user_id}") as response:
+	with urlopen(f"https://example.com/api/users/{user_id}") as response:
 		if response.status != 200:
 			raise UserError(f"HTTP {response.status}")
 		return json.load(response)
 
-@staticmethod
 def main():
 	user = fetch_user(42)
 	print(f"User: {user['name']}")

@@ -45,23 +45,31 @@ test('`css`', () => {
   assertHasToken(tokens, 'property', ' color');
 });
 
-test('`js`', () => {
+test('`javascript`', () => {
   // `console.log(…)` rather than a bare builtin call like `fetch(…)`: When a
   // builtin is called directly, `function`’s pattern (listed first) and
   // `builtin`’s pattern match the identical span, and `function` wins by
   // pattern order—so `builtin` only surfaces for non-called references like
   // `console` here
-  const tokens = tokenize('language-js', 'const x = console.log(1); // c');
+  const tokens = tokenize('language-javascript', 'const x = console.log(1); // c');
   assertHasToken(tokens, 'keyword', 'const');
   assertHasToken(tokens, 'builtin', 'console');
   assertHasToken(tokens, 'function', 'log');
   assertHasToken(tokens, 'comment', '// c');
 });
 
-test('`ts`', () => {
-  const tokens = tokenize('language-ts', 'interface X { a: string }');
+test('`js` is an alias for `javascript`', () => {
+  assert.ok(sameHighlighting(jsSource, 'const x = 1; // c', 'language-javascript', 'language-js'));
+});
+
+test('`typescript`', () => {
+  const tokens = tokenize('language-typescript', 'interface X { a: string }');
   assertHasToken(tokens, 'keyword', 'interface');
   assertHasToken(tokens, 'type', 'string');
+});
+
+test('`ts` is an alias for `typescript`', () => {
+  assert.ok(sameHighlighting(jsSource, 'interface X { a: string }', 'language-typescript', 'language-ts'));
 });
 
 test('`shell`', () => {
@@ -74,6 +82,10 @@ test('`shell`', () => {
 
 test('`bash` is an alias for `shell`', () => {
   assert.ok(sameHighlighting(jsSource, 'npm install --save $HOME # c', 'language-shell', 'language-bash'));
+});
+
+test('`sh` is an alias for `shell`', () => {
+  assert.ok(sameHighlighting(jsSource, 'npm install --save $HOME # c', 'language-shell', 'language-sh'));
 });
 
 test('`json`', () => {
@@ -89,6 +101,10 @@ test('`yaml`', () => {
   assertHasToken(tokens, 'property', 'name');
   assertHasToken(tokens, 'string', "'x'");
   assertHasToken(tokens, 'keyword', 'true');
+});
+
+test('`yml` is an alias for `yaml`', () => {
+  assert.ok(sameHighlighting(jsSource, "name: 'x'\nok: true", 'language-yaml', 'language-yml'));
 });
 
 test('`sql`', () => {

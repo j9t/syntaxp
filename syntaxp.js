@@ -126,7 +126,7 @@
       { type: 'punctuation', regex: /[{}();:,]/g }
     ],
 
-    js: [
+    javascript: [
       { type: 'comment', regex: /\/\/.*$|\/\*[\s\S]*?\*\//gm },
       { type: 'string', regex: /`[\s\S]*?`|"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|in|of|class|extends|super|this|import|from|export|default|async|await|try|catch|finally|throw|yield|static|get|set)\b/g },
@@ -137,7 +137,7 @@
       { type: 'punctuation', regex: /[{}[\]();:,.]/g }
     ],
 
-    ts: [
+    typescript: [
       { type: 'comment', regex: /\/\/.*$|\/\*[\s\S]*?\*\//gm },
       { type: 'string', regex: /`[\s\S]*?`|"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|in|of|class|extends|super|this|import|from|export|default|async|await|try|catch|finally|throw|yield|static|get|set|interface|type|enum|implements|abstract|declare|namespace|module|as|is|keyof|readonly|private|protected|public|override|satisfies|infer|never|unknown|any|void|null|undefined|true|false)\b/g },
@@ -263,8 +263,12 @@
   // Aliases: same tokenizer, different `language-*` class name
   languages.xml = languages.html;
   languages.md = languages.markdown;
+  languages.js = languages.javascript;
+  languages.ts = languages.typescript;
   languages.py = languages.python;
   languages.bash = languages.shell;
+  languages.sh = languages.shell;
+  languages.yml = languages.yaml;
   languages.njk = languages.nunjucks;
   languages.patch = languages.diff;
 
@@ -316,7 +320,7 @@
   // both ahead of this list, and returns immediately on a match—by the time
   // this list is consulted, both have already scored below threshold.
   const DETECTABLE_LANGUAGES = [
-    'markdown', 'css', 'js', 'ts', 'python', 'php', 'shell', 'json', 'yaml', 'sql', 'nunjucks', 'diff', 'http'
+    'markdown', 'css', 'javascript', 'typescript', 'python', 'php', 'shell', 'json', 'yaml', 'sql', 'nunjucks', 'diff', 'http'
   ];
 
   // A guess only counts if tokens cover at least this fraction of the
@@ -393,11 +397,11 @@
     // 'self'"` case this guarded against—and neither is a bare call
     // expression (`foo(1); bar(2);`), which is generic enough to appear in
     // many languages. A curated keyword remains the signal.
-    js: { words: { keyword: new Set([
+    javascript: { words: { keyword: new Set([
       'function', 'const', 'let', 'var', 'class', 'import', 'export', 'async', 'await',
       'return', 'typeof', 'instanceof', 'extends'
     ]) } },
-    ts: { words: { keyword: new Set([
+    typescript: { words: { keyword: new Set([
       'function', 'const', 'let', 'var', 'interface', 'class', 'import', 'export',
       'async', 'await', 'return', 'typeof', 'instanceof', 'extends', 'implements'
     ]) } },

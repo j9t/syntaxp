@@ -99,6 +99,17 @@
       { type: 'punctuation', regex: /[<>/=]/g }
     ],
 
+    markdown: [
+      { type: 'comment', regex: /<!--[\s\S]*?-->|^>.*$/gm },
+      { type: 'keyword', regex: /^#{1,6}\s.*$/gm },
+      { type: 'string', regex: /`[^`]+`/g },
+      { type: 'attribute', regex: /\*\*[^*]+\*\*|__[^_]+__/g },
+      { type: 'entity', regex: /(?<!\*)\*[^*\n]+\*(?!\*)|(?<!_)_[^_\n]+_(?!_)/g },
+      { type: 'property', regex: /(?<=\[)[^\]]+(?=\])/g },
+      { type: 'path', regex: /(?<=\]\()[^)]+(?=\))/g },
+      { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^\s*[-*+](?=\s)|^\s*\d+\.(?=\s)|[[\]()]/gm }
+    ],
+
     css: [
       { type: 'comment', regex: /\/\*[\s\S]*?\*\//g },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
@@ -115,7 +126,7 @@
       { type: 'punctuation', regex: /[{}();:,]/g }
     ],
 
-    js: [
+    javascript: [
       { type: 'comment', regex: /\/\/.*$|\/\*[\s\S]*?\*\//gm },
       { type: 'string', regex: /`[\s\S]*?`|"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|in|of|class|extends|super|this|import|from|export|default|async|await|try|catch|finally|throw|yield|static|get|set)\b/g },
@@ -126,7 +137,7 @@
       { type: 'punctuation', regex: /[{}[\]();:,.]/g }
     ],
 
-    ts: [
+    typescript: [
       { type: 'comment', regex: /\/\/.*$|\/\*[\s\S]*?\*\//gm },
       { type: 'string', regex: /`[\s\S]*?`|"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|in|of|class|extends|super|this|import|from|export|default|async|await|try|catch|finally|throw|yield|static|get|set|interface|type|enum|implements|abstract|declare|namespace|module|as|is|keyof|readonly|private|protected|public|override|satisfies|infer|never|unknown|any|void|null|undefined|true|false)\b/g },
@@ -142,6 +153,28 @@
       { type: 'punctuation', regex: /[{}[\]();:,.]/g }
     ],
 
+    python: [
+      { type: 'comment', regex: /#.*$/gm },
+      { type: 'string', regex: /(?:[rRbBfFuU]{1,2})?("""[\s\S]*?"""|'''[\s\S]*?''')|(?:[rRbBfFuU]{1,2})?"(?:[^"\\]|\\.)*"|(?:[rRbBfFuU]{1,2})?'(?:[^'\\]|\\.)*'/g },
+      { type: 'keyword', regex: /^\s*@[a-zA-Z_][a-zA-Z0-9_.]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/gm },
+      { type: 'builtin', regex: /\b(?:print|len|range|str|int|float|bool|list|dict|set|tuple|type|isinstance|super|self|enumerate|zip|map|filter|sorted|reversed|open|input|format|repr|iter|next|abs|min|max|sum|any|all|Exception|ValueError|TypeError|KeyError|IndexError|StopIteration)\b/g },
+      { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?[jJ]?\b/g },
+      { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
+      { type: 'operator', regex: /<<=|>>=|<<|>>|[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|[*/&|^]=?|~|->|:=/g },
+      { type: 'punctuation', regex: /[{}[\]();,:.]/g }
+    ],
+
+    php: [
+      { type: 'comment', regex: /\/\/.*$|#.*$|\/\*[\s\S]*?\*\//gm },
+      { type: 'string', regex: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g },
+      { type: 'keyword', regex: /<\?php\b|\?>|\b(?:abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|extends|final|finally|fn|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|match|namespace|new|or|print|private|protected|public|readonly|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield|null|true|false|self|parent)\b/gi },
+      { type: 'variable', regex: /\$[a-zA-Z_][a-zA-Z0-9_]*/g },
+      { type: 'number', regex: /\b\d+(\.\d+)?\b/g },
+      { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
+      { type: 'operator', regex: /[=!<>]=?=?|&&|\|\||[+\-*/%.]=?|->|=>|::|\?\?/g },
+      { type: 'punctuation', regex: /[{}[\]();,]/g }
+    ],
+
     shell: [
       { type: 'comment', regex: /#.*$/gm },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
@@ -150,17 +183,6 @@
       { type: 'path', regex: /(?:\.{0,2}\/)[^\s;|&<>"]+/g },
       { type: 'command', regex: /^(?:sudo|cd|ls|cat|grep|find|mkdir|rm|cp|mv|chmod|chown|ssh|scp|rsync|npm|npx|node|git|docker|docker-compose|curl|wget|tar|zip|unzip|make|cmake|brew|apt|yum|dnf|pacman|kill|ps|top|htop|df|du|mount|umount|echo|export|source|alias|unalias|which|whereis|man|tail|head|less|more|sort|uniq|wc|awk|sed|cut|tr|tee|xargs|chmod|chown|ln|touch|date|cal|env|history|clear|exit)\b/gm },
       { type: 'operator', regex: /[|;&><]/g }
-    ],
-
-    markdown: [
-      { type: 'comment', regex: /<!--[\s\S]*?-->|^>.*$/gm },
-      { type: 'keyword', regex: /^#{1,6}\s.*$/gm },
-      { type: 'string', regex: /`[^`]+`/g },
-      { type: 'attribute', regex: /\*\*[^*]+\*\*|__[^_]+__/g },
-      { type: 'entity', regex: /(?<!\*)\*[^*\n]+\*(?!\*)|(?<!_)_[^_\n]+_(?!_)/g },
-      { type: 'property', regex: /(?<=\[)[^\]]+(?=\])/g },
-      { type: 'path', regex: /(?<=\()[^)]+(?=\))/g },
-      { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^\s*[-*+](?=\s)|^\s*\d+\.(?=\s)|[[\]()]/gm }
     ],
 
     json: [
@@ -190,26 +212,29 @@
       { type: 'punctuation', regex: /[(),;.*]/g }
     ],
 
-    php: [
-      { type: 'comment', regex: /\/\/.*$|#.*$|\/\*[\s\S]*?\*\//gm },
+    nunjucks: [
+      { type: 'comment', regex: /\{#[\s\S]*?#\}/g },
       { type: 'string', regex: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g },
-      { type: 'keyword', regex: /<\?php\b|\?>|\b(?:abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|extends|final|finally|fn|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|match|namespace|new|or|print|private|protected|public|readonly|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield|null|true|false|self|parent)\b/gi },
-      { type: 'variable', regex: /\$[a-zA-Z_][a-zA-Z0-9_]*/g },
+      // Delimiters (with optional `-` whitespace-control markers) share the
+      // `keyword` type with the tag/expression keywords below, the same way
+      // `php`’s `<?php`/`?>` delimiters do—both mark where template syntax
+      // starts and ends, not ordinary punctuation
+      { type: 'keyword', regex: /\{\{-?|-?\}\}|\{%-?|-?%\}|\b(?:if|elif|else|endif|for|endfor|asyncEach|endeach|asyncAll|endall|macro|endmacro|call|endcall|set|endset|extends|block|endblock|include|import|from|as|filter|endfilter|raw|endraw|verbatim|endverbatim|with|without|and|or|not|in|is|true|false|none)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?\b/g },
-      { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
-      { type: 'operator', regex: /[=!<>]=?=?|&&|\|\||[+\-*/%.]=?|->|=>|::|\?\?/g },
-      { type: 'punctuation', regex: /[{}[\]();,]/g }
-    ],
-
-    python: [
-      { type: 'comment', regex: /#.*$/gm },
-      { type: 'string', regex: /(?:[rRbBfFuU]{1,2})?("""[\s\S]*?"""|'''[\s\S]*?''')|(?:[rRbBfFuU]{1,2})?"(?:[^"\\]|\\.)*"|(?:[rRbBfFuU]{1,2})?'(?:[^'\\]|\\.)*'/g },
-      { type: 'keyword', regex: /^\s*@[a-zA-Z_][a-zA-Z0-9_.]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/gm },
-      { type: 'builtin', regex: /\b(?:print|len|range|str|int|float|bool|list|dict|set|tuple|type|isinstance|super|self|enumerate|zip|map|filter|sorted|reversed|open|input|format|repr|iter|next|abs|min|max|sum|any|all|Exception|ValueError|TypeError|KeyError|IndexError|StopIteration)\b/g },
-      { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?[jJ]?\b/g },
-      { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
-      { type: 'operator', regex: /<<=|>>=|<<|>>|[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|[*/&|^]=?|~|->|:=/g },
-      { type: 'punctuation', regex: /[{}[\]();,:.]/g }
+      // A filter name (`{{ value | upper }}`) is only ever a bare word right
+      // after `|`—no fixed filter list is kept here since templates commonly
+      // add their own—while a called macro/function still needs the usual
+      // name-before-`(` pattern
+      { type: 'function', regex: /(?<=\|\s*)[a-zA-Z_][a-zA-Z0-9_]*|\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
+      // `=` is included alongside the comparison/arithmetic operators above
+      // for assignment (`{% set x = 1 %}`)—`={2,3}` is tried first in the
+      // alternation, so a real `==`/`===` still matches whole, never as two
+      // single `=` tokens
+      { type: 'operator', regex: /={2,3}|!={1,2}|<=|>=|<|>|\*\*|\/\/|[+\-*/%~=]/g },
+      // `{`/`}`/`:`/`?` cover object-literal syntax (`{% set data = {"a": 1} %}`)
+      // distinct from the `{{`/`{%` expression delimiters, which the `keyword`
+      // pattern above already claims as longer, higher-priority matches
+      { type: 'punctuation', regex: /[{}()[\].,:?|]/g }
     ],
 
     diff: [
@@ -243,10 +268,15 @@
   };
 
   // Aliases: same tokenizer, different `language-*` class name
-  languages.bash = languages.shell;
   languages.xml = languages.html;
-  languages.py = languages.python;
   languages.md = languages.markdown;
+  languages.js = languages.javascript;
+  languages.ts = languages.typescript;
+  languages.py = languages.python;
+  languages.bash = languages.shell;
+  languages.sh = languages.shell;
+  languages.yml = languages.yaml;
+  languages.njk = languages.nunjucks;
   languages.patch = languages.diff;
 
   // Tokenize source code and return flat token list
@@ -297,7 +327,7 @@
   // both ahead of this list, and returns immediately on a match—by the time
   // this list is consulted, both have already scored below threshold.
   const DETECTABLE_LANGUAGES = [
-    'json', 'yaml', 'diff', 'css', 'php', 'python', 'sql', 'http', 'shell', 'markdown', 'js', 'ts'
+    'markdown', 'css', 'javascript', 'typescript', 'python', 'php', 'shell', 'json', 'yaml', 'sql', 'nunjucks', 'diff', 'http'
   ];
 
   // A guess only counts if tokens cover at least this fraction of the
@@ -366,6 +396,13 @@
 
   const STRONG_SIGNAL = {
     html: { types: ['tag', 'entity', 'doctype'] },
+    // `keyword` alone (ATX headings, `^#{1,6}\s.*$`) isn’t distinctive: A
+    // `#`-comment line in Shell/Python/YAML/Apache conf matches the identical
+    // shape, so a plain block of code comments with no other Markdown
+    // formatting used to score high enough to be mistaken for Markdown.
+    // `attribute`/`entity` (bold/italic) are shapes that don’t occur by
+    // accident in ordinary comments, so they’re required instead.
+    markdown: { types: ['attribute', 'entity'] },
     css: { custom: (tokens, source) => tokens.some((t) => t.type === 'selector' && isStrongCssSelector(t, source)) },
     // No bare `string` or `function` type here: A quoted value alone is far
     // too common outside JS/TS (HTML attributes, config values, …) to count
@@ -373,33 +410,22 @@
     // 'self'"` case this guarded against—and neither is a bare call
     // expression (`foo(1); bar(2);`), which is generic enough to appear in
     // many languages. A curated keyword remains the signal.
-    js: { words: { keyword: new Set([
+    javascript: { words: { keyword: new Set([
       'function', 'const', 'let', 'var', 'class', 'import', 'export', 'async', 'await',
       'return', 'typeof', 'instanceof', 'extends'
     ]) } },
-    ts: { words: { keyword: new Set([
+    typescript: { words: { keyword: new Set([
       'function', 'const', 'let', 'var', 'interface', 'class', 'import', 'export',
       'async', 'await', 'return', 'typeof', 'instanceof', 'extends', 'implements'
     ]) } },
-    shell: { types: ['command', 'flag', 'variable'] },
-    php: { types: ['variable'] },
     python: { words: {
       keyword: new Set(['def', 'import', 'class', 'lambda', 'elif', 'except', 'yield', 'raise', 'nonlocal', 'assert']),
       builtin: new Set(['isinstance', 'enumerate', 'StopIteration', 'ValueError', 'TypeError', 'KeyError', 'IndexError'])
     } },
+    php: { types: ['variable'] },
+    shell: { types: ['command', 'flag', 'variable'] },
     json: { types: ['property'] },
     yaml: { types: ['property'] },
-    http: { types: ['builtin'] },
-    // `types: ['keyword']` is safe here (unlike js/python) because the
-    // `keyword` pattern is the curated directive list already, not a
-    // broad word list. `tag` is narrowed to actual Apache section names—
-    // left as a bare type, it’d match any `<word>`, including a real
-    // `<script>`, and win detection away from genuinely embedded HTML.
-    apacheconf: { types: ['keyword'], words: { tag: new Set([
-      'IfModule', 'Directory', 'Files', 'FilesMatch', 'Location', 'VirtualHost', 'LimitExcept'
-    ]) } },
-    diff: { types: ['comment', 'keyword'] },
-    markdown: { types: ['keyword'] },
     // SQL’s keyword pattern matches case-insensitively (real SQL is often
     // written in lowercase), so a naive “the keyword list is already
     // distinctive” assumption missed that several entries are ordinary
@@ -409,7 +435,24 @@
     sql: { words: { keyword: new Set([
       'SELECT', 'INSERT', 'DELETE', 'CREATE', 'ALTER', 'DROP', 'JOIN', 'DISTINCT',
       'UNION', 'PRIMARY', 'FOREIGN', 'REFERENCES', 'CONSTRAINT', 'PROCEDURE', 'TRIGGER', 'DECLARE'
-    ]) }, caseInsensitiveWords: true }
+    ]) }, caseInsensitiveWords: true },
+    // `nunjucks`’s `keyword` type also carries plain English words (`for`,
+    // `in`, `and`…), so it can’t be trusted wholesale like `diff`/`markdown`
+    // above—only a comment, or a `keyword` token that’s actually one of the
+    // `{{`/`}}`/`{%`/`%}` delimiters, is distinctive enough to count
+    nunjucks: { custom: (tokens, source) => tokens.some((t) => (
+      t.type === 'comment' || (t.type === 'keyword' && source.slice(t.start, t.end).startsWith('{'))
+    )) },
+    diff: { types: ['comment', 'keyword'] },
+    http: { types: ['builtin'] },
+    // `types: ['keyword']` is safe here (unlike js/python) because the
+    // `keyword` pattern is the curated directive list already, not a
+    // broad word list. `tag` is narrowed to actual Apache section names—
+    // left as a bare type, it’d match any `<word>`, including a real
+    // `<script>`, and win detection away from genuinely embedded HTML.
+    apacheconf: { types: ['keyword'], words: { tag: new Set([
+      'IfModule', 'Directory', 'Files', 'FilesMatch', 'Location', 'VirtualHost', 'LimitExcept'
+    ]) } }
   };
 
   function hasStrongSignal(tokens, source, lang) {

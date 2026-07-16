@@ -55,8 +55,8 @@ test('`detectLanguage` does not mistake ordinary config/prose for `ts`/`js` on k
 
 test('`detectLanguage` still recognizes real `ts`/`js` via a strong keyword', () => {
   const { window } = runSyntaxp(jsSource);
-  assert.equal(window.syntaxp.detectLanguage('const greeting = "hi";\nconsole.log(greeting);'), 'js');
-  assert.equal(window.syntaxp.detectLanguage('interface X { a: string }\nconst x: X = { a: "y" };'), 'ts');
+  assert.equal(window.syntaxp.detectLanguage('const greeting = "hi";\nconsole.log(greeting);'), 'javascript');
+  assert.equal(window.syntaxp.detectLanguage('interface X { a: string }\nconst x: X = { a: "y" };'), 'typescript');
 });
 
 test('`detectLanguage` does not mistake a keyword-free call expression for `js`/`ts`', () => {
@@ -138,7 +138,7 @@ test('`detectLanguage` does not mistake a JS property-access chain (`values.slic
     '  return values.slice().sort((a, b) => a.data.title.localeCompare(b.data.title))',
     '})'
   ].join('\n');
-  assert.equal(window.syntaxp.detectLanguage(source), 'js');
+  assert.equal(window.syntaxp.detectLanguage(source), 'javascript');
 });
 
 test('`detectLanguage` does not mistake a colon inside a quoted JS string (`\'lighthouse:default\'`) for a CSS pseudo-selector', () => {
@@ -165,7 +165,30 @@ test('`detectLanguage` does not mistake prose immediately before a tag (“word 
 test('`detectLanguage` still recognizes real `ts` generics (`getUsers<T>(…)`, tight, no space)', () => {
   const { window } = runSyntaxp(jsSource);
   const source = 'async function getUsers<T extends User>(limit: number): Promise<T[]> {\n  return fetch(url);\n}';
-  assert.equal(window.syntaxp.detectLanguage(source), 'ts');
+  assert.equal(window.syntaxp.detectLanguage(source), 'typescript');
+});
+
+test('`detectLanguage` does not mistake a block of `#`-style code comments for `markdown` headings', () => {
+  const { window } = runSyntaxp(jsSource);
+  const source = [
+    '# This explains what the script does',
+    '# It reads a file and prints it',
+    '# No functions here yet'
+  ].join('\n');
+  assert.notEqual(window.syntaxp.detectLanguage(source), 'markdown');
+});
+
+test('`detectLanguage` recognizes `nunjucks` template tags', () => {
+  const { window } = runSyntaxp(jsSource);
+  assert.equal(
+    window.syntaxp.detectLanguage('{% for item in items %}\n  {{ item.name }}\n{% endfor %}'),
+    'nunjucks'
+  );
+});
+
+test('`detectLanguage` does not mistake ordinary prose containing “for”/“in”/“is” for `nunjucks`', () => {
+  const { window } = runSyntaxp(jsSource);
+  assert.equal(window.syntaxp.detectLanguage('This is a note for you, in case it matters.'), null);
 });
 
 function assertHasOne(tokens, type, text) {

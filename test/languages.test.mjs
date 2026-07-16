@@ -45,23 +45,31 @@ test('`css`', () => {
   assertHasToken(tokens, 'property', ' color');
 });
 
-test('`js`', () => {
+test('`javascript`', () => {
   // `console.log(…)` rather than a bare builtin call like `fetch(…)`: When a
   // builtin is called directly, `function`’s pattern (listed first) and
   // `builtin`’s pattern match the identical span, and `function` wins by
   // pattern order—so `builtin` only surfaces for non-called references like
   // `console` here
-  const tokens = tokenize('language-js', 'const x = console.log(1); // c');
+  const tokens = tokenize('language-javascript', 'const x = console.log(1); // c');
   assertHasToken(tokens, 'keyword', 'const');
   assertHasToken(tokens, 'builtin', 'console');
   assertHasToken(tokens, 'function', 'log');
   assertHasToken(tokens, 'comment', '// c');
 });
 
-test('`ts`', () => {
-  const tokens = tokenize('language-ts', 'interface X { a: string }');
+test('`js` is an alias for `javascript`', () => {
+  assert.ok(sameHighlighting(jsSource, 'const x = 1; // c', 'language-javascript', 'language-js'));
+});
+
+test('`typescript`', () => {
+  const tokens = tokenize('language-typescript', 'interface X { a: string }');
   assertHasToken(tokens, 'keyword', 'interface');
   assertHasToken(tokens, 'type', 'string');
+});
+
+test('`ts` is an alias for `typescript`', () => {
+  assert.ok(sameHighlighting(jsSource, 'interface X { a: string }', 'language-typescript', 'language-ts'));
 });
 
 test('`shell`', () => {
@@ -74,6 +82,10 @@ test('`shell`', () => {
 
 test('`bash` is an alias for `shell`', () => {
   assert.ok(sameHighlighting(jsSource, 'npm install --save $HOME # c', 'language-shell', 'language-bash'));
+});
+
+test('`sh` is an alias for `shell`', () => {
+  assert.ok(sameHighlighting(jsSource, 'npm install --save $HOME # c', 'language-shell', 'language-sh'));
 });
 
 test('`json`', () => {
@@ -89,6 +101,10 @@ test('`yaml`', () => {
   assertHasToken(tokens, 'property', 'name');
   assertHasToken(tokens, 'string', "'x'");
   assertHasToken(tokens, 'keyword', 'true');
+});
+
+test('`yml` is an alias for `yaml`', () => {
+  assert.ok(sameHighlighting(jsSource, "name: 'x'\nok: true", 'language-yaml', 'language-yml'));
 });
 
 test('`sql`', () => {
@@ -150,6 +166,14 @@ test('`markdown`', () => {
   assertHasToken(tokens, 'string', '`c`');
   assertHasToken(tokens, 'property', 't');
   assertHasToken(tokens, 'path', 'https://x');
+});
+
+test('`markdown` does not tag an ordinary parenthetical aside as a `path`', () => {
+  const tokens = tokenize('language-markdown', 'This works well (see below) in practice.');
+  assert.ok(
+    !tokens.some((t) => t.type === 'path'),
+    `ordinary parentheses were mistaken for a path: ${JSON.stringify(tokens)}`
+  );
 });
 
 test('`markdown` empty link parts do not produce zero-length tokens', () => {
@@ -225,6 +249,46 @@ test('`http` does not mistake a JSON body’s mid-line colon for a header value'
     !tokens.some((t) => t.type === 'string' && t.text.includes('"name"')),
     `body content leaked into a header-value string token: ${JSON.stringify(tokens)}`
   );
+});
+
+test('`nunjucks`', () => {
+  const tokens = tokenize(
+    'language-nunjucks',
+    '{# c #}\n{% if user.age >= 18 %}\n  {{ user.name | upper }}\n{% endif %}'
+  );
+  assertHasToken(tokens, 'comment', '{# c #}');
+  assertHasToken(tokens, 'keyword', '{%');
+  assertHasToken(tokens, 'keyword', 'if');
+  assertHasToken(tokens, 'operator', '>=');
+  assertHasToken(tokens, 'number', '18');
+  assertHasToken(tokens, 'keyword', '%}');
+  assertHasToken(tokens, 'keyword', '{{');
+  assertHasToken(tokens, 'punctuation', '|');
+  assertHasToken(tokens, 'function', 'upper');
+  assertHasToken(tokens, 'keyword', '}}');
+  assertHasToken(tokens, 'keyword', 'endif');
+});
+
+test('`nunjucks` assignment `=` is tagged `operator`, distinct from `==`', () => {
+  const tokens = tokenize('language-nunjucks', '{% set x = 1 %}\n{% if x == 1 %}{% endif %}');
+  assertHasToken(tokens, 'operator', '=');
+  assertHasToken(tokens, 'operator', '==');
+});
+
+test('`nunjucks` object-literal braces and colon are tagged `punctuation`', () => {
+  const tokens = tokenize('language-nunjucks', '{% set data = {"a": 1} %}');
+  assertHasToken(tokens, 'punctuation', '{');
+  assertHasToken(tokens, 'punctuation', '}');
+  assertHasToken(tokens, 'punctuation', ':');
+});
+
+test('`nunjucks` macro call is tagged `function` like other languages’ calls', () => {
+  const tokens = tokenize('language-nunjucks', '{{ formatPrice(item.price) }}');
+  assertHasToken(tokens, 'function', 'formatPrice');
+});
+
+test('`njk` is an alias for `nunjucks`', () => {
+  assert.ok(sameHighlighting(jsSource, '{% if x %}{{ x }}{% endif %}', 'language-nunjucks', 'language-njk'));
 });
 
 test('`apacheconf`', () => {

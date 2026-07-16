@@ -12,7 +12,7 @@ syntaxp—“syntax paint”—provides code highlighting via the [CSS Custom Hi
 
 ## Usage
 
-Add [the syntaxp script (~15 KB minified)](https://github.com/j9t/syntaxp/releases) to your site or page (for privacy and performance reasons, _you_ decide on hosting):
+Add [the syntaxp script (~16 KB minified)](https://github.com/j9t/syntaxp/releases) to your site or page (for privacy and performance reasons, _you_ decide on hosting):
 
 ```html
 <script src=/path/to/syntaxp.js defer></script>

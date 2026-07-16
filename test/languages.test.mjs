@@ -168,6 +168,14 @@ test('`markdown`', () => {
   assertHasToken(tokens, 'path', 'https://x');
 });
 
+test('`markdown` does not tag an ordinary parenthetical aside as a `path`', () => {
+  const tokens = tokenize('language-markdown', 'This works well (see below) in practice.');
+  assert.ok(
+    !tokens.some((t) => t.type === 'path'),
+    `ordinary parentheses were mistaken for a path: ${JSON.stringify(tokens)}`
+  );
+});
+
 test('`markdown` empty link parts do not produce zero-length tokens', () => {
   const text = '[](x.png) and [t]()';
   const { highlightsByType } = runSyntaxp(jsSource, {
@@ -259,6 +267,19 @@ test('`nunjucks`', () => {
   assertHasToken(tokens, 'function', 'upper');
   assertHasToken(tokens, 'keyword', '}}');
   assertHasToken(tokens, 'keyword', 'endif');
+});
+
+test('`nunjucks` assignment `=` is tagged `operator`, distinct from `==`', () => {
+  const tokens = tokenize('language-nunjucks', '{% set x = 1 %}\n{% if x == 1 %}{% endif %}');
+  assertHasToken(tokens, 'operator', '=');
+  assertHasToken(tokens, 'operator', '==');
+});
+
+test('`nunjucks` object-literal braces and colon are tagged `punctuation`', () => {
+  const tokens = tokenize('language-nunjucks', '{% set data = {"a": 1} %}');
+  assertHasToken(tokens, 'punctuation', '{');
+  assertHasToken(tokens, 'punctuation', '}');
+  assertHasToken(tokens, 'punctuation', ':');
 });
 
 test('`nunjucks` macro call is tagged `function` like other languages’ calls', () => {

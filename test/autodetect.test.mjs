@@ -168,6 +168,16 @@ test('`detectLanguage` still recognizes real `ts` generics (`getUsers<T>(…)`, 
   assert.equal(window.syntaxp.detectLanguage(source), 'typescript');
 });
 
+test('`detectLanguage` does not mistake a block of `#`-style code comments for `markdown` headings', () => {
+  const { window } = runSyntaxp(jsSource);
+  const source = [
+    '# This explains what the script does',
+    '# It reads a file and prints it',
+    '# No functions here yet'
+  ].join('\n');
+  assert.notEqual(window.syntaxp.detectLanguage(source), 'markdown');
+});
+
 test('`detectLanguage` recognizes `nunjucks` template tags', () => {
   const { window } = runSyntaxp(jsSource);
   assert.equal(

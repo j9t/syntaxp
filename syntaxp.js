@@ -106,7 +106,7 @@
       { type: 'attribute', regex: /\*\*[^*]+\*\*|__[^_]+__/g },
       { type: 'entity', regex: /(?<!\*)\*[^*\n]+\*(?!\*)|(?<!_)_[^_\n]+_(?!_)/g },
       { type: 'property', regex: /(?<=\[)[^\]]+(?=\])/g },
-      { type: 'path', regex: /(?<=\()[^)]+(?=\))/g },
+      { type: 'path', regex: /(?<=\]\()[^)]+(?=\))/g },
       { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^\s*[-*+](?=\s)|^\s*\d+\.(?=\s)|[[\]()]/gm }
     ],
 
@@ -226,8 +226,15 @@
       // add their own—while a called macro/function still needs the usual
       // name-before-`(` pattern
       { type: 'function', regex: /(?<=\|\s*)[a-zA-Z_][a-zA-Z0-9_]*|\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
-      { type: 'operator', regex: /={2,3}|!={1,2}|<=|>=|<|>|\*\*|\/\/|[+\-*/%~]/g },
-      { type: 'punctuation', regex: /[()[\].,|]/g }
+      // `=` is included alongside the comparison/arithmetic operators above
+      // for assignment (`{% set x = 1 %}`)—`={2,3}` is tried first in the
+      // alternation, so a real `==`/`===` still matches whole, never as two
+      // single `=` tokens
+      { type: 'operator', regex: /={2,3}|!={1,2}|<=|>=|<|>|\*\*|\/\/|[+\-*/%~=]/g },
+      // `{`/`}`/`:`/`?` cover object-literal syntax (`{% set data = {"a": 1} %}`)
+      // distinct from the `{{`/`{%` expression delimiters, which the `keyword`
+      // pattern above already claims as longer, higher-priority matches
+      { type: 'punctuation', regex: /[{}()[\].,:?|]/g }
     ],
 
     diff: [
@@ -389,7 +396,13 @@
 
   const STRONG_SIGNAL = {
     html: { types: ['tag', 'entity', 'doctype'] },
-    markdown: { types: ['keyword'] },
+    // `keyword` alone (ATX headings, `^#{1,6}\s.*$`) isn’t distinctive: A
+    // `#`-comment line in Shell/Python/YAML/Apache conf matches the identical
+    // shape, so a plain block of code comments with no other Markdown
+    // formatting used to score high enough to be mistaken for Markdown.
+    // `attribute`/`entity` (bold/italic) are shapes that don’t occur by
+    // accident in ordinary comments, so they’re required instead.
+    markdown: { types: ['attribute', 'entity'] },
     css: { custom: (tokens, source) => tokens.some((t) => t.type === 'selector' && isStrongCssSelector(t, source)) },
     // No bare `string` or `function` type here: A quoted value alone is far
     // too common outside JS/TS (HTML attributes, config values, …) to count

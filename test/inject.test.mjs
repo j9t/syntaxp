@@ -116,3 +116,14 @@ test('an explicit `data-theme` overrides a conflicting auto-detected page color-
   assert.doesNotMatch(css, /prefers-color-scheme/);
   assert.match(css, /@media all\s*\{/);
 });
+
+test('a present-but-empty `data-theme=""` still counts as explicit and is not overridden by auto-detection', () => {
+  const jsSource = readFileSync(`${dirRoot}/dist/syntaxp.js`, 'utf8');
+  const { styleElements } = runSyntaxp(jsSource, { theme: '', colorScheme: 'dark' });
+  // Neither the (empty, unrecognized) `data-theme` nor the page’s
+  // auto-detected `color-scheme: dark` should end up forcing a theme—an
+  // explicit attribute, even an empty one, takes precedence over
+  // auto-detection and then falls through `applyThemeOverride`’s
+  // unrecognized-value branch, leaving the default OS-driven CSS intact
+  assert.match(styleElements[0].textContent, /prefers-color-scheme/);
+});

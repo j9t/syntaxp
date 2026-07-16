@@ -76,8 +76,12 @@
     if (nonce) {
       style.nonce = nonce;
     }
-    // An explicit `data-theme` always wins over the auto-detected one
-    const theme = (currentScript && currentScript.getAttribute('data-theme')) || detectPageTheme();
+    // An explicit `data-theme`—even present but empty/unrecognized—always
+    // wins over the auto-detected one; `hasAttribute` (not a truthiness
+    // check on the value) is what makes that hold for `data-theme=""`
+    const theme = (currentScript && currentScript.hasAttribute('data-theme'))
+      ? currentScript.getAttribute('data-theme')
+      : detectPageTheme();
     style.textContent = applyThemeOverride(CSS_EMBEDDED, theme);
     document.head.appendChild(style);
   }

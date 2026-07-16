@@ -37,13 +37,22 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
     document: {
       readyState: 'complete',
       documentElement: {},
-      currentScript: (currentScriptNonce || autodetect || theme) ? {
+      // `theme` distinguishes “attribute absent” (`undefined`, the default)
+      // from “attribute present but empty” (pass `theme: ''`) the same way
+      // a real `data-theme=""` attribute would—see `hasAttribute` below
+      currentScript: (currentScriptNonce || autodetect || theme !== undefined) ? {
         nonce: currentScriptNonce,
         hasAttribute(name) {
-          return Boolean(autodetect) && name === 'data-autodetect';
+          if (name === 'data-autodetect') {
+            return Boolean(autodetect);
+          }
+          if (name === 'data-theme') {
+            return theme !== undefined;
+          }
+          return false;
         },
         getAttribute(name) {
-          return name === 'data-theme' ? (theme || null) : null;
+          return name === 'data-theme' && theme !== undefined ? theme : null;
         }
       } : null,
       head: {

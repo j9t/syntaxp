@@ -89,7 +89,7 @@
 Install the package with `npm install example`, then read the **usage**
 guide or check the _API reference_.
 
-> Requires support for the Amazing API.
+&gt; Requires support for the Amazing API.
 
 * Zero dependencies
 * Zero maintenance
@@ -170,7 +170,7 @@ from urllib.request import urlopen
 class UserError(Exception):
 	pass
 
-def fetch_user(user_id: int) -> dict:
+def fetch_user(user_id: int) -&gt; dict:
 	with urlopen(f"/api/users/{user_id}") as response:
 		if response.status != 200:
 			raise UserError(f"HTTP {response.status}")

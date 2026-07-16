@@ -168,6 +168,19 @@ test('`detectLanguage` still recognizes real `ts` generics (`getUsers<T>(…)`, 
   assert.equal(window.syntaxp.detectLanguage(source), 'ts');
 });
 
+test('`detectLanguage` recognizes `nunjucks` template tags', () => {
+  const { window } = runSyntaxp(jsSource);
+  assert.equal(
+    window.syntaxp.detectLanguage('{% for item in items %}\n  {{ item.name }}\n{% endfor %}'),
+    'nunjucks'
+  );
+});
+
+test('`detectLanguage` does not mistake ordinary prose containing “for”/“in”/“is” for `nunjucks`', () => {
+  const { window } = runSyntaxp(jsSource);
+  assert.equal(window.syntaxp.detectLanguage('This is a note for you, in case it matters.'), null);
+});
+
 function assertHasOne(tokens, type, text) {
   const matches = tokens.filter((t) => t.type === type && t.text === text);
   assert.equal(matches.length, 1, `expected exactly one ${type} token ${JSON.stringify(text)}, got ${matches.length}`);

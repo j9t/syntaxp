@@ -227,6 +227,33 @@ test('`http` does not mistake a JSON body’s mid-line colon for a header value'
   );
 });
 
+test('`nunjucks`', () => {
+  const tokens = tokenize(
+    'language-nunjucks',
+    '{# c #}\n{% if user.age >= 18 %}\n  {{ user.name | upper }}\n{% endif %}'
+  );
+  assertHasToken(tokens, 'comment', '{# c #}');
+  assertHasToken(tokens, 'keyword', '{%');
+  assertHasToken(tokens, 'keyword', 'if');
+  assertHasToken(tokens, 'operator', '>=');
+  assertHasToken(tokens, 'number', '18');
+  assertHasToken(tokens, 'keyword', '%}');
+  assertHasToken(tokens, 'keyword', '{{');
+  assertHasToken(tokens, 'punctuation', '|');
+  assertHasToken(tokens, 'function', 'upper');
+  assertHasToken(tokens, 'keyword', '}}');
+  assertHasToken(tokens, 'keyword', 'endif');
+});
+
+test('`nunjucks` macro call is tagged `function` like other languages’ calls', () => {
+  const tokens = tokenize('language-nunjucks', '{{ formatPrice(item.price) }}');
+  assertHasToken(tokens, 'function', 'formatPrice');
+});
+
+test('`njk` is an alias for `nunjucks`', () => {
+  assert.ok(sameHighlighting(jsSource, '{% if x %}{{ x }}{% endif %}', 'language-nunjucks', 'language-njk'));
+});
+
 test('`apacheconf`', () => {
   const tokens = tokenize(
     'language-apacheconf',

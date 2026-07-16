@@ -83,6 +83,17 @@
 	&lt;p class=intro&gt;Welcome.&lt;/p&gt;
 &lt;/body&gt;
 &lt;/html&gt;</code></pre>
+<h2>Markdown</h2>
+<pre><code class=language-markdown># Getting Started
+
+Install the package with `npm install example`, then read the **usage**
+guide or check the _API reference_.
+
+> Requires support for the Amazing API.
+
+* Zero dependencies
+* Zero maintenance
+* [Read the docs](https://example.com/)</code></pre>
 <h2>CSS</h2>
 <pre><code class=language-css>/* Reset */
 *,
@@ -151,6 +162,27 @@ async function getUsers&lt;T extends User&gt;(
 
 export { getUsers };
 export type { User };</code></pre>
+<h2>Python</h2>
+<pre><code class=language-python># Fetch and display user data
+import json
+from urllib.request import urlopen
+
+class UserError(Exception):
+	pass
+
+def fetch_user(user_id: int) -> dict:
+	with urlopen(f"/api/users/{user_id}") as response:
+		if response.status != 200:
+			raise UserError(f"HTTP {response.status}")
+		return json.load(response)
+
+@staticmethod
+def main():
+	user = fetch_user(42)
+	print(f"User: {user['name']}")
+
+if __name__ == "__main__":
+	main()</code></pre>
 <h2>Shell (and Bash)</h2>
 <pre><code class=language-shell># Install dependencies
 npm install
@@ -163,17 +195,6 @@ NODE_ENV=production npm run build
 
 # Deploy to server
 ssh deploy@server.example.com "cd /var/www && git pull && pm2 restart app"</code></pre>
-<h2>Markdown</h2>
-<pre><code class=language-markdown># Getting Started
-
-Install the package with `npm install example`, then read the **usage**
-guide or check the _API reference_.
-
-> Requires support for the Amazing API.
-
-* Zero dependencies
-* Zero maintenance
-* [Read the docs](https://example.com/)</code></pre>
 <h2>JSON</h2>
 <pre><code class=language-json>{
 	"name": "My App",
@@ -210,27 +231,16 @@ WHERE orders.created_at &gt;= '2026-01-01'
 GROUP BY customers.name
 ORDER BY order_count DESC
 LIMIT 10;</code></pre>
-<h2>Python</h2>
-<pre><code class=language-python># Fetch and display user data
-import json
-from urllib.request import urlopen
+<h2>Nunjucks</h2>
+<pre><code class=language-nunjucks>{# Render a list of active users #}
+{% for user in users %}
+	{% if user.active %}
+		&lt;li&gt;{{ user.name | upper }}&lt;/li&gt;
+	{% endif %}
+{% endfor %}
 
-class UserError(Exception):
-	pass
-
-def fetch_user(user_id: int) -> dict:
-	with urlopen(f"/api/users/{user_id}") as response:
-		if response.status != 200:
-			raise UserError(f"HTTP {response.status}")
-		return json.load(response)
-
-@staticmethod
-def main():
-	user = fetch_user(42)
-	print(f"User: {user['name']}")
-
-if __name__ == "__main__":
-	main()</code></pre>
+{% set greeting = "Hello, " ~ user.name ~ "!" %}
+{{ greeting }}</code></pre>
 <h2>Diff</h2>
 <pre><code class=language-diff>diff --git a/syntaxp.js b/syntaxp.js
 index 1a2b3c4..5d6e7f8 100644

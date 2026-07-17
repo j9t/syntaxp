@@ -290,10 +290,9 @@
     const matches = [];
 
     for (const { type, regex } of patterns) {
-      const re = new RegExp(regex.source, regex.flags);
       let match;
 
-      while ((match = re.exec(source)) !== null) {
+      while ((match = regex.exec(source)) !== null) {
         matches.push({
           type,
           start: match.index,

@@ -12,7 +12,7 @@ syntaxp—“syntax paint”—provides code highlighting via the [CSS Custom Hi
 
 ## Usage
 
-Add [the syntaxp script (~16 KB minified)](https://github.com/j9t/syntaxp/releases) to your site or page (for privacy and performance reasons, _you_ decide on hosting):
+Add [the syntaxp script (~16 KB minified)](https://github.com/j9t/syntaxp/releases) to your site or page (for privacy, security, and performance reasons, _you_ decide on hosting):
 
 ```html
 <script src=/path/to/syntaxp.js defer></script>
@@ -79,7 +79,7 @@ The style sheet injected by syntaxp is a `<style>` element, which, if you run a 
 
 ### Updating
 
-Given syntaxp’s ownership-minded approach (self-hosting for privacy and performance reasons), there is no automatic update process. Each script file ships with a version comment (e.g., `/*! syntaxp 2.1.0, https://github.com/j9t/syntaxp */`) that you can use to compare with [the latest release](https://github.com/j9t/syntaxp/releases). (If using a Content Security Policy, [take note on CSP management](#content-security-policy-management).)
+Given syntaxp’s ownership-minded approach (self-hosting for privacy, security, and performance reasons), there is no automatic update process. Each script file ships with a version comment (e.g., `/*! syntaxp 2.1.0, https://github.com/j9t/syntaxp */`) that you can use to compare with [the latest release](https://github.com/j9t/syntaxp/releases). (If using a Content Security Policy, [take note on CSP management](#content-security-policy-management).)
 
 ## Supported Languages
 

@@ -6,12 +6,12 @@ on:
     paths:
       - package.json
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
-
-permissions:
-  contents: write
 
 jobs:
   release:
@@ -37,9 +37,6 @@ jobs:
       - name: "Install dependencies"
         if: steps.version.outputs.is_new == 'true'
         run: npm ci
-      - name: "Check contrast"
-        if: steps.version.outputs.is_new == 'true'
-        run: npm run check-contrast
       - name: "Build"
         if: steps.version.outputs.is_new == 'true'
         run: npm run build

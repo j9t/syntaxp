@@ -3,6 +3,8 @@ name: "GitHub Pages"
 on:
   push:
     branches: main
+    # Only the deployed files; other changes don’t affect the site
+    paths: ["index.html", "syntaxp.css", "syntaxp.js"]
 
 permissions:
   contents: read

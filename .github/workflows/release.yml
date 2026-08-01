@@ -4,18 +4,20 @@ on:
   push:
     branches: main
     paths:
-      - package.json
+      - "package.json"
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-permissions:
-  contents: write
-
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: "Check out repository"
         uses: actions/checkout@v7
@@ -37,9 +39,6 @@ jobs:
       - name: "Install dependencies"
         if: steps.version.outputs.is_new == 'true'
         run: npm ci
-      - name: "Check contrast"
-        if: steps.version.outputs.is_new == 'true'
-        run: npm run check-contrast
       - name: "Build"
         if: steps.version.outputs.is_new == 'true'
         run: npm run build

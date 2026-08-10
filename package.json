@@ -1,7 +1,7 @@
 {
   "description": "Super-simple code highlighting via the CSS Custom Highlight API",
   "devDependencies": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.2"
   },
   "license": "MIT",
   "name": "syntaxp",

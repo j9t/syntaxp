@@ -138,7 +138,7 @@ Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 
 ### Releasing
 
-Version is tracked in `package.json`, not tagged manually. To issue a release, bump the `version` field and push (or merge a PR that does) to `main`. A [GitHub Actions workflow](https://github.com/j9t/syntaxp/actions/workflows/release.yml) then automatically:
+Version is tracked in package.json, not tagged manually. To issue a release, bump the `version` field and push (or merge a PR that does) to `main`. A [GitHub Actions workflow](https://github.com/j9t/syntaxp/actions/workflows/release.yml) then automatically:
 
 1. checks contrast and builds `dist/`,
 2. tags the commit `vX.Y.Z`, and

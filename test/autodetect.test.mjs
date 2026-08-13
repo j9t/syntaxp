@@ -117,6 +117,14 @@ test('`detectLanguage` recognizes an `.htaccess` caching block', () => {
   assert.equal(window.syntaxp.detectLanguage(source), 'apacheconf');
 });
 
+test('`detectLanguage` recognizes a `<Limit>` section on the section name alone', () => {
+  const { window } = runSyntaxp(jsSource);
+  // `Satisfy` is deliberately absent from `APACHE_DIRECTIVES`, so the
+  // section name is the only thing left to recognize this by
+  const source = '<Limit GET POST>\n\tSatisfy any\n</Limit>';
+  assert.equal(window.syntaxp.detectLanguage(source), 'apacheconf');
+});
+
 test('`detectLanguage` does not claim every `Directive value` config as `apacheconf`', () => {
   const { window } = runSyntaxp(jsSource);
   // Same shape as Apache configuration, but no directive syntaxp knows—

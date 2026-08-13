@@ -485,8 +485,8 @@
     // a bare type, would match any `<word>`, including a real `<script>`,
     // and win detection away from genuinely embedded HTML.
     apacheconf: { words: { keyword: APACHE_DIRECTIVES, tag: new Set([
-      'IfDefine', 'IfModule', 'Directory', 'DirectoryMatch', 'Files', 'FilesMatch', 'Location',
-      'LocationMatch', 'Proxy', 'RequireAll', 'RequireAny', 'VirtualHost', 'LimitExcept'
+      'IfDefine', 'IfModule', 'Directory', 'DirectoryMatch', 'Files', 'FilesMatch', 'Limit',
+      'LimitExcept', 'Location', 'LocationMatch', 'Proxy', 'RequireAll', 'RequireAny', 'VirtualHost'
     ]) } }
   };
 

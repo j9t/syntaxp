@@ -303,4 +303,35 @@ test('`apacheconf`', () => {
   assertHasToken(tokens, 'variable', '%{HTTP_HOST}');
   assertHasToken(tokens, 'flag', '[NC]');
   assertHasToken(tokens, 'variable', '$1');
+  assertHasToken(tokens, 'builtin', 'On');
+});
+
+test('`apacheconf` styles whatever directive opens a line, listed or not', () => {
+  const tokens = tokenize(
+    'language-apacheconf',
+    'ExpiresActive On\nExpiresByType text/html A10\n\t<IfModule mod_pagespeed.c>\n\tModPagespeed on\n\t</IfModule>'
+  );
+  assertHasToken(tokens, 'keyword', 'ExpiresActive');
+  assertHasToken(tokens, 'keyword', 'ExpiresByType');
+  // Indented, and from a third-party module—still a directive
+  assertHasToken(tokens, 'keyword', 'ModPagespeed');
+  assertHasToken(tokens, 'builtin', 'on');
+  // A section is markup, not a directive
+  assert.ok(!tokens.some((t) => t.type === 'keyword' && t.text === 'IfModule'));
+});
+
+test('`apacheconf` leaves slashes inside MIME types and paths alone', () => {
+  const tokens = tokenize('language-apacheconf', 'AddOutputFilterByType DEFLATE image/svg+xml text/css\nErrorDocument 404 /errors/on.html');
+  assert.ok(!tokens.some((t) => t.type === 'punctuation'));
+  // `on` only reads as a value in value position, not inside a path
+  assert.ok(!tokens.some((t) => t.type === 'builtin'));
+});
+
+test('`apacheconf` tags mod_expires periods as numbers, but not digits inside identifiers', () => {
+  const tokens = tokenize('language-apacheconf', 'ExpiresByType text/css A129600\nAddCharset utf-8 .css\nErrorDocument 404 /404.html');
+  assertHasToken(tokens, 'number', 'A129600');
+  assertHasToken(tokens, 'number', '404');
+  assert.ok(!tokens.some((t) => t.type === 'number' && t.text === '8'));
+  // The `404` of `/404.html` is part of a filename
+  assert.equal(tokens.filter((t) => t.type === 'number' && t.text === '404').length, 1);
 });

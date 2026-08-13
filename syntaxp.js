@@ -261,9 +261,20 @@
       { type: 'tag', regex: /<\/?[A-Za-z][A-Za-z0-9]*/g },
       { type: 'variable', regex: /[$%]\{[^}]*\}|\$\d+|%\d+/g },
       { type: 'flag', regex: /\[[^\]\n]*\]/g },
-      { type: 'keyword', regex: /^\s*(?:AddCharset|AddDefaultCharset|AddEncoding|AddHandler|AddLanguage|AddOutputFilter|AddOutputFilterByType|AddType|Allow|AllowOverride|AuthName|AuthType|AuthUserFile|CheckSpelling|ContentDigest|Deny|DefaultLanguage|Deflate|DirectoryIndex|DocumentRoot|ErrorDocument|ErrorLog|FileETag|Header|IndexIgnore|Listen|LoadModule|Options|Order|Redirect|RedirectMatch|Require|RewriteBase|RewriteCond|RewriteEngine|RewriteRule|SSLEngine|ServerAdmin|ServerAlias|ServerName|SetEnv|SetEnvIf|SetEnvIfNoCase)\b/gm },
-      { type: 'number', regex: /\b\d+\b/g },
-      { type: 'punctuation', regex: /[<>/=]/g }
+      // Whatever identifier opens a line is the directive: Apache ships
+      // hundreds of them and each module adds its own, so any list here would
+      // leave real configuration half-styled. Detection stays conservative
+      // regardless—see `APACHE_DIRECTIVES`
+      { type: 'keyword', regex: /(?<=^[ \t]*)[A-Za-z][A-Za-z0-9_]*(?=[ \t]|$)/gm },
+      // Only as a standalone value, so an `on`/`off` inside a path or
+      // pattern (e.g., `/errors/on.html`) stays plain
+      { type: 'builtin', regex: /(?<=[ \t])(?:on|off)(?=[ \t]|$)/gim },
+      // An `A`/`M` prefix is a mod_expires period (`A604800`); the boundaries
+      // keep digits that are part of an identifier, path, or version plain
+      // (`utf-8`, `/404.html`, `mod_php7.c`)
+      { type: 'number', regex: /(?<![\w.-])[AM]?\d+(?:\.\d+)*(?![\w.-])/g },
+      // No `/` here—it’d match inside every MIME type and path
+      { type: 'punctuation', regex: /[<>=]/g }
     ]
   };
 
@@ -393,6 +404,29 @@
     return true;
   }
 
+  // Common Apache directives—consulted only to decide whether unclassed
+  // source is Apache configuration at all (see `STRONG_SIGNAL`), never for
+  // highlighting, so a directive missing here is still styled like any other.
+  // Every name here doubles as a license to read a line of text opening with
+  // it as configuration, so directives that are also ordinary English words
+  // only earn a place if real `.htaccess` files lean on them (`Header`,
+  // `Options`); rarer ones (`Include`, `Satisfy`) aren’t worth the misreads.
+  const APACHE_DIRECTIVES = new Set([
+    'AddCharset', 'AddDefaultCharset', 'AddEncoding', 'AddHandler', 'AddLanguage', 'AddOutputFilter',
+    'AddOutputFilterByType', 'AddType', 'Alias', 'AliasMatch', 'Allow', 'AllowOverride', 'AuthName',
+    'AuthType', 'AuthUserFile', 'BrowserMatch', 'BrowserMatchNoCase', 'CheckSpelling',
+    'ContentDigest', 'CustomLog', 'DefaultLanguage', 'Deny', 'DirectoryIndex', 'DirectorySlash',
+    'DocumentRoot', 'ErrorDocument', 'ErrorLog', 'ExpiresActive', 'ExpiresByType', 'ExpiresDefault',
+    'FallbackResource', 'FileETag', 'ForceType', 'Header', 'IndexIgnore', 'IndexOptions',
+    'KeepAlive', 'Listen', 'LoadModule', 'LogLevel', 'Options', 'Order', 'Redirect',
+    'RedirectMatch', 'RemoveType', 'RequestHeader', 'Require', 'RewriteBase', 'RewriteCond',
+    'RewriteEngine', 'RewriteMap', 'RewriteOptions', 'RewriteRule', 'SSLCertificateFile',
+    'SSLCertificateKeyFile',
+    'SSLEngine', 'SSLProtocol', 'ServerAdmin', 'ServerAlias', 'ServerName', 'ServerSignature',
+    'ServerTokens', 'SetEnv', 'SetEnvIf', 'SetEnvIfNoCase', 'SetHandler', 'TypesConfig',
+    'php_flag', 'php_value'
+  ]);
+
   const STRONG_SIGNAL = {
     html: { types: ['tag', 'entity', 'doctype'] },
     // `keyword` alone (ATX headings, `^#{1,6}\s.*$`) isn’t distinctive: A
@@ -444,13 +478,15 @@
     )) },
     diff: { types: ['comment', 'keyword'] },
     http: { types: ['builtin'] },
-    // `types: ['keyword']` is safe here (unlike js/python) because the
-    // `keyword` pattern is the curated directive list already, not a
-    // broad word list. `tag` is narrowed to actual Apache section names—
-    // left as a bare type, it’d match any `<word>`, including a real
-    // `<script>`, and win detection away from genuinely embedded HTML.
-    apacheconf: { types: ['keyword'], words: { tag: new Set([
-      'IfModule', 'Directory', 'Files', 'FilesMatch', 'Location', 'VirtualHost', 'LimitExcept'
+    // Both types are narrowed to curated names here. `keyword` covers the
+    // opening identifier of any line (see the tokenizer), which by itself
+    // says nothing—that shape fits prose and most line-based formats, too—so
+    // detection asks for a directive it does recognize. `tag`, left as
+    // a bare type, would match any `<word>`, including a real `<script>`,
+    // and win detection away from genuinely embedded HTML.
+    apacheconf: { words: { keyword: APACHE_DIRECTIVES, tag: new Set([
+      'IfDefine', 'IfModule', 'Directory', 'DirectoryMatch', 'Files', 'FilesMatch', 'Location',
+      'LocationMatch', 'Proxy', 'RequireAll', 'RequireAny', 'VirtualHost', 'LimitExcept'
     ]) } }
   };
 

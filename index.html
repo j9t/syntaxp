@@ -271,6 +271,10 @@ Cache-Control: no-store
 &lt;/IfModule&gt;
 
 Header always set X-Content-Type-Options "nosniff"
-AddOutputFilterByType DEFLATE text/html text/css application/javascript</code></pre>
+AddOutputFilterByType DEFLATE text/html text/css application/javascript
+
+ExpiresActive On
+ExpiresByType text/css A129600
+ExpiresByType text/html A10</code></pre>
 <h2>Inline code</h2>
 <p>“Use <code class=language-javascript>console.log("hello")</code> for debugging”, “enter <code class=language-shell>npm install</code> to install.”

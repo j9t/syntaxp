@@ -107,6 +107,33 @@ test('`detectLanguage` recognizes `apacheconf`/`.htaccess` directives, including
   );
 });
 
+test('`detectLanguage` recognizes an `.htaccess` caching block', () => {
+  const { window } = runSyntaxp(jsSource);
+  const source = [
+    'ExpiresActive On',
+    'ExpiresByType text/css A129600',
+    'ExpiresByType text/html A10'
+  ].join('\n');
+  assert.equal(window.syntaxp.detectLanguage(source), 'apacheconf');
+});
+
+test('`detectLanguage` recognizes a `<Limit>` section on the section name alone', () => {
+  const { window } = runSyntaxp(jsSource);
+  // `Satisfy` is deliberately absent from `APACHE_DIRECTIVES`, so the
+  // section name is the only thing left to recognize this by
+  const source = '<Limit GET POST>\n\tSatisfy any\n</Limit>';
+  assert.equal(window.syntaxp.detectLanguage(source), 'apacheconf');
+});
+
+test('`detectLanguage` does not claim every `Directive value` config as `apacheconf`', () => {
+  const { window } = runSyntaxp(jsSource);
+  // Same shape as Apache configuration, but no directive syntaxp knows—
+  // the curated names in `APACHE_DIRECTIVES`, not the line shape, are what
+  // makes a guess
+  const source = 'Host example.com\n  Port 22\n  User git\n  IdentityFile ~/.ssh/id_ed25519';
+  assert.notEqual(window.syntaxp.detectLanguage(source), 'apacheconf');
+});
+
 test('`detectLanguage` prefers `apacheconf` over `html` for `<IfModule>`/`<Directory>` sections', () => {
   const { window } = runSyntaxp(jsSource);
   assert.equal(window.syntaxp.detectLanguage('<IfModule mod_rewrite.c>\nRewriteEngine On\n</IfModule>'), 'apacheconf');

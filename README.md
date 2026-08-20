@@ -1,6 +1,6 @@
 # syntaxp Syntax Highlighter
 
-syntaxp—“syntax paint”—provides code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/css-highlight-api-1/). Zero runtime dependencies. No extra elements in the DOM.
+syntaxp—“syntax paint”—provides code highlighting via the [CSS Custom Highlight API](https://drafts.csswg.org/css-highlight-api-1/). Zero runtime dependencies. No extra elements in the DOM. Light and dark mode.
 
 ## How It Works
 

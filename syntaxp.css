@@ -29,7 +29,9 @@
 
 	--s5p-operator: #06708a;
 
+	/* #c22068 */
 	--s5p-builtin: #c22068;
+	--s5p-type: #c22068;
 
 	--s5p-variable: #1f2937;
 
@@ -71,7 +73,9 @@
 
 		--s5p-operator: #89dceb;
 
+		/* #f5c2e7 */
 		--s5p-builtin: #f5c2e7;
+		--s5p-type: #f5c2e7;
 
 		--s5p-variable: #cdd6f4;
 
@@ -130,6 +134,10 @@
 
 ::highlight(builtin) {
 	color: var(--s5p-builtin);
+}
+
+::highlight(type) {
+	color: var(--s5p-type);
 }
 
 ::highlight(doctype) {

@@ -122,10 +122,11 @@
       // A bare type selector (`p`, `h1`, `body`…) has no punctuation prefix
       // to key off, unlike `.class`/`#id`/`:pseudo` above, so it’s only
       // trusted directly before a rule’s `{`, optionally via a compound
-      // (`a:hover {`, `p.note {`), not in looser shapes JS shares
-      // (`foo(a, b) {`, `key: {`); the compound’s length is capped
-      // to keep long unbroken runs (minified code) linear
-      { type: 'selector', regex: /(?<![\w-])[a-zA-Z][a-zA-Z0-9-]*(?=(?:[.#:[][^\s{};,]{1,200})?\s*\{)/g, accept: isSelectorContext },
+      // (`a:hover {`, `p.note {`) with balanced parentheses only, not in
+      // looser shapes JS shares (`foo(a, b) {`, `key: {`, `if (a[i].b) {`);
+      // the compound’s length is capped to keep long unbroken runs (minified
+      // code) linear
+      { type: 'selector', regex: /(?<![\w-])[a-zA-Z][a-zA-Z0-9-]*(?=(?:[.#:[](?:[^\s{};,()]|\([^(){};]*\)){1,200})?\s*\{)/g, accept: isSelectorContext },
       // Not followed by a `{` before any `;`/`}`, which would make it a
       // selector (`a:hover {`)
       { type: 'property', regex: /(?=[a-zA-Z-])(?<=(?:^|[{;])\s*)[a-zA-Z-]+(?=\s*:)/gm, accept: (context, start, end) => !context.beforeBrace[end] },

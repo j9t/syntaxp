@@ -418,3 +418,10 @@ test('Every language tokenizes adversarial input in linear time', () => {
 test('Highlights a block with more ranges than fit in a call’s arguments', () => {
   assert.doesNotThrow(() => tokenize('language-css', '{'.repeat(300000)));
 });
+
+test('Ignores a `language-*` class naming an inherited object property', () => {
+  const codeSamples = ['constructor', '__proto__', 'toString'].map((name) => ({ className: `language-${name}`, text: 'x' }));
+  codeSamples.push({ className: 'language-js', text: 'const a = 1;' });
+  const { highlightsByType } = runSyntaxp(jsSource, { codeSamples });
+  assert.ok(highlightsByType.has('keyword'));
+});

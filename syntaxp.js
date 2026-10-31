@@ -614,7 +614,7 @@
 
     const source = textNode.textContent;
     const lang = detect ? detectLanguage(source) : (element.className.match(/language-(\w+)/) || [])[1];
-    if (!lang || !languages[lang]) {
+    if (!lang || !Object.hasOwn(languages, lang)) {
       return;
     }
 

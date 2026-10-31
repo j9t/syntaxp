@@ -84,6 +84,9 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
       constructor(...ranges) {
         this.ranges = ranges;
       }
+      add(range) {
+        this.ranges.push(range);
+      }
     },
     console
   };

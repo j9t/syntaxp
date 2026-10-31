@@ -102,9 +102,9 @@
       { type: 'string', regex: /`[^`]+`/g },
       { type: 'attribute', regex: /\*\*[^*]+\*\*|__[^_]+__/g },
       { type: 'entity', regex: /(?<!\*)\*[^*\n]+\*(?!\*)|(?<!_)_[^_\n]+_(?!_)/g },
-      { type: 'property', regex: /(?<=\[)[^\]]+(?=\])/g },
-      { type: 'path', regex: /(?<=\]\()[^)]+(?=\))/g },
-      { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^\s*[-*+](?=\s)|^\s*\d+\.(?=\s)|[[\]()]/gm }
+      { type: 'property', regex: /(?<=\[)[^[\]\n]+(?=\])/g },
+      { type: 'path', regex: /(?<=\]\()[^()\n]+(?=\))/g },
+      { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^[ \t]*[-*+](?=\s)|^[ \t]*\d+\.(?=\s)|[[\]()]/gm }
     ],
 
     css: [
@@ -115,17 +115,18 @@
       { type: 'keyword', regex: /@(media|import|keyframes|font-face|supports|charset|namespace|layer|property)\b/g },
       // Selectors are followed by a `{` before any `;`/`}`, unlike values
       // (`color: #fff;`, `url(a.png)`), and never sit in an at-rule’s prelude
-      // (`@media (hover:hover)`)
-      { type: 'selector', regex: /(?<!@[^;{}]*)(?:::?|[.#])[a-zA-Z_-][a-zA-Z0-9_-]*(?=[^;{}]*\{)/g },
+      // (`@media (hover:hover)`)—see `isSelectorContext`
+      { type: 'selector', regex: /(?:::?|[.#])[a-zA-Z_-][a-zA-Z0-9_-]*/g, accept: isSelectorContext },
       // A bare type selector (`p`, `h1`, `body`…) has no punctuation prefix
       // to key off, unlike `.class`/`#id`/`:pseudo` above, so it’s only
       // trusted directly before a rule’s `{`, optionally via a compound
       // (`a:hover {`, `p.note {`), not in looser shapes JS shares
-      // (`foo(a, b) {`, `key: {`)
-      { type: 'selector', regex: /(?<!@[^;{}]*)(?<![\w-])[a-zA-Z][a-zA-Z0-9-]*(?=(?:[.#:[][^\s{};,]+)*\s*\{)/g },
+      // (`foo(a, b) {`, `key: {`); the compound’s length is capped
+      // to keep long unbroken runs (minified code) linear
+      { type: 'selector', regex: /(?<![\w-])[a-zA-Z][a-zA-Z0-9-]*(?=(?:[.#:[][^\s{};,]{1,200})?\s*\{)/g, accept: isSelectorContext },
       // Not followed by a `{` before any `;`/`}`, which would make it a
       // selector (`a:hover {`)
-      { type: 'property', regex: /(?<=(?:^|[{;])\s*)[a-zA-Z-]+(?=\s*:(?![^;{}]*\{))/gm },
+      { type: 'property', regex: /(?=[a-zA-Z-])(?<=(?:^|[{;])\s*)[a-zA-Z-]+(?=\s*:)/gm, accept: (context, start, end) => !context.beforeBrace[end] },
       { type: 'function', regex: /(?:rgba?|hsla?|linear-gradient|radial-gradient|calc|var|env|clamp|min|max|url)\s*(?=\()/g },
       { type: 'punctuation', regex: /[{}();:,]/g }
     ],
@@ -160,7 +161,7 @@
     python: [
       { type: 'comment', regex: /#.*$/gm },
       { type: 'string', regex: /(?:[rRbBfFuU]{1,2})?("""[\s\S]*?"""|'''[\s\S]*?''')|(?:[rRbBfFuU]{1,2})?"(?:[^"\\]|\\.)*"|(?:[rRbBfFuU]{1,2})?'(?:[^'\\]|\\.)*'/g },
-      { type: 'keyword', regex: /^\s*@[a-zA-Z_][a-zA-Z0-9_.]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/gm },
+      { type: 'keyword', regex: /^[ \t]*@[a-zA-Z_][a-zA-Z0-9_.]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/gm },
       { type: 'builtin', regex: /\b(?:print|len|range|str|int|float|bool|list|dict|set|tuple|type|isinstance|super|self|enumerate|zip|map|filter|sorted|reversed|open|input|format|repr|iter|next|abs|min|max|sum|any|all|Exception|ValueError|TypeError|KeyError|IndexError|StopIteration)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?[jJ]?\b/g },
       { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
@@ -199,11 +200,11 @@
 
     yaml: [
       { type: 'comment', regex: /#.*$/gm },
-      { type: 'property', regex: /^\s*(?:-\s*)?[a-zA-Z_][\w.-]*(?=\s*:(?:\s|$))/gm },
+      { type: 'property', regex: /^[ \t]*(?:-[ \t]*)?[a-zA-Z_][\w.-]*(?=\s*:(?:\s|$))/gm },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(?:true|false|null)\b/g },
       { type: 'number', regex: /-?\b\d+(\.\d+)?\b/g },
-      { type: 'punctuation', regex: /^---$|^\.\.\.$|[:,[\]{}]|^\s*-(?=\s)/gm }
+      { type: 'punctuation', regex: /^---$|^\.\.\.$|[:,[\]{}]|^[ \t]*-(?=\s)/gm }
     ],
 
     sql: [
@@ -263,8 +264,8 @@
       { type: 'comment', regex: /#.*$/gm },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
       { type: 'tag', regex: /<\/?[A-Za-z][A-Za-z0-9]*/g },
-      { type: 'variable', regex: /[$%]\{[^}]*\}|\$\d+|%\d+/g },
-      { type: 'flag', regex: /\[[^\]\n]*\]/g },
+      { type: 'variable', regex: /[$%]\{[^{}\n]*\}|\$\d+|%\d+/g },
+      { type: 'flag', regex: /\[[^[\]\n]*\]/g },
       // Whatever identifier opens a line is the directive: Apache ships
       // hundreds of them and each module adds its own, so any list here would
       // leave real configuration half-styled. Detection stays conservative
@@ -294,22 +295,50 @@
   languages.njk = languages.nunjucks;
   languages.patch = languages.diff;
 
+  // Per position, whether the next `;`/`{`/`}` is a `{` and whether an `@`
+  // came after the previous one, so `accept` checks take constant time
+  // instead of rescanning the source per match (quadratic on long inputs)
+  function getStatementContext(source) {
+    const beforeBrace = new Uint8Array(source.length + 1);
+    const afterAt = new Uint8Array(source.length + 1);
+    for (let i = source.length - 1, next = 0; i >= 0; i--) {
+      const char = source[i];
+      next = char === '{' ? 1 : (char === ';' || char === '}') ? 0 : next;
+      beforeBrace[i] = next;
+    }
+    for (let i = 0, at = 0; i < source.length; i++) {
+      afterAt[i] = at;
+      const char = source[i];
+      at = char === '@' ? 1 : (char === ';' || char === '{' || char === '}') ? 0 : at;
+    }
+    return { beforeBrace, afterAt };
+  }
+
+  function isSelectorContext(context, start, end) {
+    return context.beforeBrace[end] === 1 && context.afterAt[start] === 0;
+  }
+
   // Tokenize source code and return flat token list
   function tokenize(source, lang) {
     const patterns = languages[lang];
+    let context;
 
     // Collect all matches with positions
     const matches = [];
 
-    for (const { type, regex } of patterns) {
+    for (const { type, regex, accept } of patterns) {
       let match;
 
       while ((match = regex.exec(source)) !== null) {
-        matches.push({
-          type,
-          start: match.index,
-          end: match.index + match[0].length
-        });
+        const start = match.index;
+        const end = start + match[0].length;
+        if (accept) {
+          context = context || getStatementContext(source);
+          if (!accept(context, start, end)) {
+            continue;
+          }
+        }
+        matches.push({ type, start, end });
       }
     }
 
@@ -623,8 +652,12 @@
       });
     }
 
+    // Ranges are added one by one, since spreading them as arguments
+    // overflows the call stack on very large blocks
     for (const [type, ranges] of rangesByType) {
-      CSS.highlights.set(type, new Highlight(...ranges));
+      const highlight = new Highlight();
+      ranges.forEach((range) => highlight.add(range));
+      CSS.highlights.set(type, highlight);
     }
   }
 

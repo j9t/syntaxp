@@ -64,6 +64,20 @@ test('`css` does not tag at-rule conditions as selectors', () => {
   assert.deepEqual(tokens.filter((t) => t.type === 'selector').map((t) => t.text), ['a']);
 });
 
+test('`css` tokenizes long inputs in linear time', () => {
+  const inputs = [
+    Array.from({ length: 20000 }, (_, i) => `.s${i}`).join(', ') + ' { color: red; }',
+    'word.Next '.repeat(20000),
+    'a' + ':b'.repeat(40) + ' x',
+    'a' + '.b'.repeat(20000)
+  ];
+  for (const text of inputs) {
+    const start = performance.now();
+    tokenize('language-css', text);
+    assert.ok(performance.now() - start < 1000, `took too long for ${JSON.stringify(text.slice(0, 20))}…`);
+  }
+});
+
 test('`css` tags a percentage, unit included, as a number', () => {
   const tokens = tokenize('language-css', 'a { width: 50%; }');
   assertHasToken(tokens, 'number', '50%');
@@ -387,4 +401,20 @@ test('Every token type has a `::highlight()` rule and a custom property in both 
     assert.match(light, new RegExp(`--s5p-${type}:`), `no light color for ${type}`);
     assert.match(dark, new RegExp(`--s5p-${type}:`), `no dark color for ${type}`);
   }
+});
+
+test('Every language tokenizes adversarial input in linear time', () => {
+  const languages = ['html', 'markdown', 'css', 'javascript', 'typescript', 'python', 'php', 'shell', 'json', 'yaml', 'sql', 'nunjucks', 'diff', 'http', 'apacheconf'];
+  for (const unit of ['\n', ' \n', '  ', '[', '](', '{%']) {
+    const text = unit.repeat(80000 / unit.length);
+    for (const language of languages) {
+      const start = performance.now();
+      tokenize(`language-${language}`, text);
+      assert.ok(performance.now() - start < 1000, `${language} took too long for ${JSON.stringify(unit)}`);
+    }
+  }
+});
+
+test('Highlights a block with more ranges than fit in a call’s arguments', () => {
+  assert.doesNotThrow(() => tokenize('language-css', '{'.repeat(300000)));
 });

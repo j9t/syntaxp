@@ -18,7 +18,6 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
 
   const styleElements = [];
   const highlightsByType = new Map();
-  const listeners = {};
 
   const sandbox = {
     CSS: {
@@ -31,7 +30,7 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
         }
       }
     },
-    getComputedStyle(element) {
+    getComputedStyle() {
       return { colorScheme: colorScheme || '' };
     },
     document: {
@@ -60,8 +59,8 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
           styleElements.push(el);
         }
       },
-      createElement(tag) {
-        return { tagName: tag, textContent: '', nonce: '' };
+      createElement() {
+        return { textContent: '', nonce: '' };
       },
       querySelectorAll(selector) {
         if (selector === 'code[class*="language-"]') {
@@ -72,9 +71,7 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
         }
         return [];
       },
-      addEventListener(name, fn) {
-        listeners[name] = fn;
-      }
+      addEventListener() {}
     },
     window: {},
     Node: { TEXT_NODE: 3 },
@@ -87,6 +84,9 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
       constructor(...ranges) {
         this.ranges = ranges;
       }
+      add(range) {
+        this.ranges.push(range);
+      }
     },
     console
   };
@@ -94,7 +94,7 @@ export function runSyntaxp(jsSource, { codeSamples = [], autoSamples = [], curre
   vm.createContext(sandbox);
   vm.runInContext(jsSource, sandbox);
 
-  return { styleElements, highlightsByType, window: sandbox.window, listeners };
+  return { styleElements, highlightsByType, window: sandbox.window };
 }
 
 // Flattens the `{type -> StaticRange[]}` map from one `runSyntaxp` call

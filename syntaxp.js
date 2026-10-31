@@ -61,9 +61,6 @@
   // likely to be wrong as right. Pages in that position still need an
   // explicit `data-theme`.
   function detectPageTheme() {
-    if (typeof getComputedStyle !== 'function' || !document.documentElement) {
-      return null;
-    }
     const colorScheme = getComputedStyle(document.documentElement).colorScheme;
     return (colorScheme === 'light' || colorScheme === 'dark') ? colorScheme : null;
   }
@@ -86,7 +83,9 @@
     document.head.appendChild(style);
   }
 
-  // Token patterns per language
+  // Token patterns per language; a lookbehind that opens a pattern gets a
+  // lookahead for the token’s first character in front of it, so it doesn’t
+  // rescan whitespace at every position (quadratic in older V8)
   const languages = {
 
     html: [
@@ -105,23 +104,32 @@
       { type: 'string', regex: /`[^`]+`/g },
       { type: 'attribute', regex: /\*\*[^*]+\*\*|__[^_]+__/g },
       { type: 'entity', regex: /(?<!\*)\*[^*\n]+\*(?!\*)|(?<!_)_[^_\n]+_(?!_)/g },
-      { type: 'property', regex: /(?<=\[)[^\]]+(?=\])/g },
-      { type: 'path', regex: /(?<=\]\()[^)]+(?=\))/g },
-      { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^\s*[-*+](?=\s)|^\s*\d+\.(?=\s)|[[\]()]/gm }
+      { type: 'property', regex: /(?<=\[)[^[\]\n]+(?=\])/g },
+      { type: 'path', regex: /(?<=\]\()[^()\n]+(?=\))/g },
+      { type: 'punctuation', regex: /^(?:-{3,}|\*{3,}|_{3,})$|^[ \t]*[-*+](?=\s)|^[ \t]*\d+\.(?=\s)|[[\]()]/gm }
     ],
 
     css: [
       { type: 'comment', regex: /\/\*[\s\S]*?\*\//g },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
-      { type: 'number', regex: /\b\d+(\.\d+)?(px|em|rem|%|vh|vw|s|ms|deg|fr)?\b/g },
+      // `%` takes no trailing `\b`, as that would require a word character to follow
+      { type: 'number', regex: /\b\d+(?:\.\d+)?(?:(?:px|em|rem|vh|vw|s|ms|deg|fr)\b|%|\b)/g },
       { type: 'keyword', regex: /@(media|import|keyframes|font-face|supports|charset|namespace|layer|property)\b/g },
-      { type: 'selector', regex: /[.#:][a-zA-Z_-][a-zA-Z0-9_-]*/g },
+      // Selectors are followed by a `{` before any `;`/`}`, unlike values
+      // (`color: #fff;`, `url(a.png)`), and never sit in an at-rule’s prelude
+      // (`@media (hover:hover)`)—see `isSelectorContext`
+      { type: 'selector', regex: /(?:::?|[.#])[a-zA-Z_-][a-zA-Z0-9_-]*/g, accept: isSelectorContext },
       // A bare type selector (`p`, `h1`, `body`…) has no punctuation prefix
-      // to key off, unlike `.class`/`#id`/`:pseudo` above—the one thing
-      // that reliably marks it as a selector rather than, say, a property
-      // value is sitting directly before a rule’s opening `{`
-      { type: 'selector', regex: /[a-zA-Z][a-zA-Z0-9-]*(?=\s*\{)/g },
-      { type: 'property', regex: /(?<=^|[{;])\s*[a-zA-Z-]+(?=\s*:)/gm },
+      // to key off, unlike `.class`/`#id`/`:pseudo` above, so it’s only
+      // trusted directly before a rule’s `{`, optionally via a compound
+      // (`a:hover {`, `p.note {`) with balanced parentheses only, not in
+      // looser shapes JS shares (`foo(a, b) {`, `key: {`, `if (a[i].b) {`);
+      // the compound’s length is capped to keep long unbroken runs (minified
+      // code) linear
+      { type: 'selector', regex: /(?<![\w-])[a-zA-Z][a-zA-Z0-9-]*(?=(?:[.#:[](?:[^\s{};,()]|\([^(){};]*\)){1,200})?\s*\{)/g, accept: isSelectorContext },
+      // Not followed by a `{` before any `;`/`}`, which would make it a
+      // selector (`a:hover {`)
+      { type: 'property', regex: /(?=[a-zA-Z-])(?<=(?:^|[{;])\s*)[a-zA-Z-]+(?=\s*:)/gm, accept: (context, start, end) => !context.beforeBrace[end] },
       { type: 'function', regex: /(?:rgba?|hsla?|linear-gradient|radial-gradient|calc|var|env|clamp|min|max|url)\s*(?=\()/g },
       { type: 'punctuation', regex: /[{}();:,]/g }
     ],
@@ -131,9 +139,9 @@
       { type: 'string', regex: /`[\s\S]*?`|"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|in|of|class|extends|super|this|import|from|export|default|async|await|try|catch|finally|throw|yield|static|get|set)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?\b/g },
-      { type: 'function', regex: /\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*\()/g },
       { type: 'builtin', regex: /\b(console|document|window|Math|Array|Object|String|Number|Boolean|Promise|Map|Set|RegExp|Error|JSON|Proxy|Reflect|Symbol|WeakMap|WeakSet|Intl|URL|URLSearchParams|FormData|Headers|Request|Response|fetch|setTimeout|setInterval|clearTimeout|clearInterval|parseInt|parseFloat|isNaN|isFinite|encodeURI|decodeURI|encodeURIComponent|decodeURIComponent|alert|confirm|prompt|requestAnimationFrame|cancelAnimationFrame|structuredClone)\b/g },
-      { type: 'operator', regex: /[=!<>]=?=?|&&|\|\||[+\-*/%]=?|\?\?|\.\.\.|=>/g },
+      { type: 'function', regex: /\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*\()/g },
+      { type: 'operator', regex: /=>|[=!<>]=?=?|&&|\|\||[+\-*/%]=?|\?\?|\.\.\./g },
       { type: 'punctuation', regex: /[{}[\]();:,.]/g }
     ],
 
@@ -149,18 +157,18 @@
       // example this tokenizer was asked to score during language detection
       { type: 'function', regex: /\b[a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*\(|<)/g },
       { type: 'type', regex: /\b(string|number|boolean|bigint|symbol|object|Array|Promise|Record|Partial|Required|Pick|Omit|Exclude|Extract|NonNullable|ReturnType|Parameters|ConstructorParameters|InstanceType)\b/g },
-      { type: 'operator', regex: /[=!<>]=?=?|&&|\|\||[+\-*/%]=?|\?\?|\.\.\.|=>/g },
+      { type: 'operator', regex: /=>|[=!<>]=?=?|&&|\|\||[+\-*/%]=?|\?\?|\.\.\./g },
       { type: 'punctuation', regex: /[{}[\]();:,.]/g }
     ],
 
     python: [
       { type: 'comment', regex: /#.*$/gm },
       { type: 'string', regex: /(?:[rRbBfFuU]{1,2})?("""[\s\S]*?"""|'''[\s\S]*?''')|(?:[rRbBfFuU]{1,2})?"(?:[^"\\]|\\.)*"|(?:[rRbBfFuU]{1,2})?'(?:[^'\\]|\\.)*'/g },
-      { type: 'keyword', regex: /^\s*@[a-zA-Z_][a-zA-Z0-9_.]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/gm },
+      { type: 'keyword', regex: /^[ \t]*@[a-zA-Z_][a-zA-Z0-9_.]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/gm },
       { type: 'builtin', regex: /\b(?:print|len|range|str|int|float|bool|list|dict|set|tuple|type|isinstance|super|self|enumerate|zip|map|filter|sorted|reversed|open|input|format|repr|iter|next|abs|min|max|sum|any|all|Exception|ValueError|TypeError|KeyError|IndexError|StopIteration)\b/g },
       { type: 'number', regex: /\b\d+(\.\d+)?([eE][+-]?\d+)?[jJ]?\b/g },
       { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
-      { type: 'operator', regex: /<<=|>>=|<<|>>|[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|[*/&|^]=?|~|->|:=/g },
+      { type: 'operator', regex: /->|<<=|>>=|<<|>>|[=!<>]=?|\*\*=?|\/\/=?|[+\-%]=?|[*/&|^]=?|~|:=/g },
       { type: 'punctuation', regex: /[{}[\]();,:.]/g }
     ],
 
@@ -171,7 +179,7 @@
       { type: 'variable', regex: /\$[a-zA-Z_][a-zA-Z0-9_]*/g },
       { type: 'number', regex: /\b\d+(\.\d+)?\b/g },
       { type: 'function', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
-      { type: 'operator', regex: /[=!<>]=?=?|&&|\|\||[+\-*/%.]=?|->|=>|::|\?\?/g },
+      { type: 'operator', regex: /->|=>|[=!<>]=?=?|&&|\|\||[+\-*/%.]=?|::|\?\?/g },
       { type: 'punctuation', regex: /[{}[\]();,]/g }
     ],
 
@@ -181,7 +189,7 @@
       { type: 'variable', regex: /\$[{(]?[a-zA-Z_][a-zA-Z0-9_]*[})]?/g },
       { type: 'flag', regex: /(?<=^|\s)--?[a-zA-Z-]+/g },
       { type: 'path', regex: /(?:\.{0,2}\/)[^\s;|&<>"]+/g },
-      { type: 'command', regex: /^(?:sudo|cd|ls|cat|grep|find|mkdir|rm|cp|mv|chmod|chown|ssh|scp|rsync|npm|npx|node|git|docker|docker-compose|curl|wget|tar|zip|unzip|make|cmake|brew|apt|yum|dnf|pacman|kill|ps|top|htop|df|du|mount|umount|echo|export|source|alias|unalias|which|whereis|man|tail|head|less|more|sort|uniq|wc|awk|sed|cut|tr|tee|xargs|chmod|chown|ln|touch|date|cal|env|history|clear|exit)\b/gm },
+      { type: 'command', regex: /^(?:sudo|cd|ls|cat|grep|find|mkdir|rm|cp|mv|chmod|chown|ssh|scp|rsync|npm|npx|node|git|docker|docker-compose|curl|wget|tar|zip|unzip|make|cmake|brew|apt|yum|dnf|pacman|kill|ps|top|htop|df|du|mount|umount|echo|export|source|alias|unalias|which|whereis|man|tail|head|less|more|sort|uniq|wc|awk|sed|cut|tr|tee|xargs|ln|touch|date|cal|env|history|clear|exit)\b/gm },
       { type: 'operator', regex: /[|;&><]/g }
     ],
 
@@ -195,11 +203,11 @@
 
     yaml: [
       { type: 'comment', regex: /#.*$/gm },
-      { type: 'property', regex: /^\s*(?:-\s*)?[a-zA-Z_][\w.-]*(?=\s*:(?:\s|$))/gm },
+      { type: 'property', regex: /^[ \t]*(?:-[ \t]*)?[a-zA-Z_][\w.-]*(?=\s*:(?:\s|$))/gm },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
       { type: 'keyword', regex: /\b(?:true|false|null)\b/g },
       { type: 'number', regex: /-?\b\d+(\.\d+)?\b/g },
-      { type: 'punctuation', regex: /^---$|^\.\.\.$|[:,[\]{}]|^\s*-(?=\s)/gm }
+      { type: 'punctuation', regex: /^---$|^\.\.\.$|[:,[\]{}]|^[ \t]*-(?=\s)/gm }
     ],
 
     sql: [
@@ -225,7 +233,7 @@
       // after `|`—no fixed filter list is kept here since templates commonly
       // add their own—while a called macro/function still needs the usual
       // name-before-`(` pattern
-      { type: 'function', regex: /(?<=\|\s*)[a-zA-Z_][a-zA-Z0-9_]*|\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
+      { type: 'function', regex: /(?=[a-zA-Z_])(?<=\|\s*)[a-zA-Z_][a-zA-Z0-9_]*|\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
       // `=` is included alongside the comparison/arithmetic operators above
       // for assignment (`{% set x = 1 %}`)—`={2,3}` is tried first in the
       // alternation, so a real `==`/`===` still matches whole, never as two
@@ -259,13 +267,13 @@
       { type: 'comment', regex: /#.*$/gm },
       { type: 'string', regex: /"[^"]*"|'[^']*'/g },
       { type: 'tag', regex: /<\/?[A-Za-z][A-Za-z0-9]*/g },
-      { type: 'variable', regex: /[$%]\{[^}]*\}|\$\d+|%\d+/g },
-      { type: 'flag', regex: /\[[^\]\n]*\]/g },
+      { type: 'variable', regex: /[$%]\{[^{}\n]*\}|\$\d+|%\d+/g },
+      { type: 'flag', regex: /\[[^[\]\n]*\]/g },
       // Whatever identifier opens a line is the directive: Apache ships
       // hundreds of them and each module adds its own, so any list here would
       // leave real configuration half-styled. Detection stays conservative
       // regardless—see `APACHE_DIRECTIVES`
-      { type: 'keyword', regex: /(?<=^[ \t]*)[A-Za-z][A-Za-z0-9_]*(?=[ \t]|$)/gm },
+      { type: 'keyword', regex: /(?=[A-Za-z])(?<=^[ \t]*)[A-Za-z][A-Za-z0-9_]*(?=[ \t]|$)/gm },
       // Only as a standalone value, so an `on`/`off` inside a path or
       // pattern (e.g., `/errors/on.html`) stays plain
       { type: 'builtin', regex: /(?<=[ \t])(?:on|off)(?=[ \t]|$)/gim },
@@ -290,25 +298,50 @@
   languages.njk = languages.nunjucks;
   languages.patch = languages.diff;
 
+  // Per position, whether the next `;`/`{`/`}` is a `{` and whether an `@`
+  // came after the previous one, so `accept` checks take constant time
+  // instead of rescanning the source per match (quadratic on long inputs)
+  function getStatementContext(source) {
+    const beforeBrace = new Uint8Array(source.length + 1);
+    const afterAt = new Uint8Array(source.length + 1);
+    for (let i = source.length - 1, next = 0; i >= 0; i--) {
+      const char = source[i];
+      next = char === '{' ? 1 : (char === ';' || char === '}') ? 0 : next;
+      beforeBrace[i] = next;
+    }
+    for (let i = 0, at = 0; i < source.length; i++) {
+      afterAt[i] = at;
+      const char = source[i];
+      at = char === '@' ? 1 : (char === ';' || char === '{' || char === '}') ? 0 : at;
+    }
+    return { beforeBrace, afterAt };
+  }
+
+  function isSelectorContext(context, start, end) {
+    return context.beforeBrace[end] === 1 && context.afterAt[start] === 0;
+  }
+
   // Tokenize source code and return flat token list
   function tokenize(source, lang) {
     const patterns = languages[lang];
-    if (!patterns) {
-      return [];
-    }
+    let context;
 
     // Collect all matches with positions
     const matches = [];
 
-    for (const { type, regex } of patterns) {
+    for (const { type, regex, accept } of patterns) {
       let match;
 
       while ((match = regex.exec(source)) !== null) {
-        matches.push({
-          type,
-          start: match.index,
-          end: match.index + match[0].length
-        });
+        const start = match.index;
+        const end = start + match[0].length;
+        if (accept) {
+          context = context || getStatementContext(source);
+          if (!accept(context, start, end)) {
+            continue;
+          }
+        }
+        matches.push({ type, start, end });
       }
     }
 
@@ -388,7 +421,7 @@
   function isStrongCssSelector(token, source) {
     const text = source.slice(token.start, token.end);
     if (text[0] === ':') {
-      return CSS_PSEUDO.has(text.slice(1).toLowerCase());
+      return CSS_PSEUDO.has(text.replace(/^::?/, '').toLowerCase());
     }
     if (text[0] === '.' || text[0] === '#') {
       // `)`/`]` also disqualify: A chained call/index like `.slice().sort()`
@@ -492,9 +525,6 @@
 
   function hasStrongSignal(tokens, source, lang) {
     const spec = STRONG_SIGNAL[lang];
-    if (!spec) {
-      return true;
-    }
     if (spec.custom) {
       return spec.custom(tokens, source);
     }
@@ -505,7 +535,10 @@
       if (spec.words && spec.words[t.type]) {
         // `tag` matches include the leading `<`/`</`—strip it so curated
         // tag-name sets (e.g., apacheconf’s section names) can list bare names
-        const text = source.slice(t.start, t.end).replace(t.type === 'tag' ? /^<\/?/ : /^/, '');
+        let text = source.slice(t.start, t.end);
+        if (t.type === 'tag') {
+          text = text.replace(/^<\/?/, '');
+        }
         return spec.words[t.type].has(spec.caseInsensitiveWords ? text.toUpperCase() : text);
       }
       return false;
@@ -572,19 +605,20 @@
     return best;
   }
 
-  // Collect `StaticRanges` by token type for a single element into a shared map
-  function collectRanges(element, rangesByType, langOverride) {
+  // Collect `StaticRanges` by token type for a single element into a shared map,
+  // with the language taken from its class or, if `detect` is set, guessed
+  function collectRanges(element, rangesByType, detect) {
     const textNode = element.firstChild;
     if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
       return;
     }
 
-    const lang = langOverride || (element.className.match(/language-(\w+)/) || [])[1];
-    if (!lang || !languages[lang]) {
+    const source = textNode.textContent;
+    const lang = detect ? detectLanguage(source) : (element.className.match(/language-(\w+)/) || [])[1];
+    if (!lang || !Object.hasOwn(languages, lang)) {
       return;
     }
 
-    const source = textNode.textContent;
     const tokens = tokenize(source, lang);
 
     for (const token of tokens) {
@@ -617,19 +651,16 @@
     const autoDetect = currentScript && currentScript.hasAttribute('data-autodetect');
     if (autoDetect) {
       document.querySelectorAll('pre > code:not([class*="language-"])').forEach((element) => {
-        const textNode = element.firstChild;
-        if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
-          return;
-        }
-        const lang = detectLanguage(textNode.textContent);
-        if (lang) {
-          collectRanges(element, rangesByType, lang);
-        }
+        collectRanges(element, rangesByType, true);
       });
     }
 
+    // Ranges are added one by one, since spreading them as arguments
+    // overflows the call stack on very large blocks
     for (const [type, ranges] of rangesByType) {
-      CSS.highlights.set(type, new Highlight(...ranges));
+      const highlight = new Highlight();
+      ranges.forEach((range) => highlight.add(range));
+      CSS.highlights.set(type, highlight);
     }
   }
 

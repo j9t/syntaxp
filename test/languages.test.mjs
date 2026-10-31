@@ -33,29 +33,75 @@ test('`xml` is an alias for `html`', () => {
 });
 
 test('`css`', () => {
-  // Note: A leading space is part of the `property` match (consistent with
-  // this tokenizer's handling of leading whitespace elsewhere, e.g., YAML/
-  // Markdown—harmless for rendering since whitespace carries no color), and
-  // a `#rrggbb` color value is matched by the `selector` pattern (same shape
-  // as an ID selector)—a pre-existing quirk of this grammar, not something
-  // introduced here
   const tokens = tokenize('language-css', '@media (min-width: 1px) { .a { color: #fff; } }');
   assertHasToken(tokens, 'keyword', '@media');
   assertHasToken(tokens, 'selector', '.a');
-  assertHasToken(tokens, 'property', ' color');
+  assertHasToken(tokens, 'property', 'color');
+});
+
+test('`css` excludes leading whitespace from a property', () => {
+  const text = '.a {\n  color: red;\n  margin: 0;\n}';
+  const properties = tokenize('language-css', text).filter((t) => t.type === 'property');
+  assert.deepEqual(properties.map((t) => t.text), ['color', 'margin']);
+});
+
+test('`css` does not tag values as selectors', () => {
+  const tokens = tokenize('language-css', '.a { color:red; background: #fff url(a.png) }');
+  const selectors = tokens.filter((t) => t.type === 'selector').map((t) => t.text);
+  assert.deepEqual(selectors, ['.a']);
+});
+
+test('`css` tags compound and nested selectors, pseudo-classes included', () => {
+  const tokens = tokenize('language-css', 'a:hover, .b:not(.c) { color: red; }\np.e::before { content: none; }\n.d {\n  &:focus { color: blue }\n}');
+  for (const selector of [':hover', '.b', ':not', '.c', 'p', '.e', '::before', '.d', ':focus']) {
+    assertHasToken(tokens, 'selector', selector);
+  }
+  assert.ok(!tokens.some((t) => t.type === 'property' && t.text === 'a'), 'tagged `a` in `a:hover` as a property');
+});
+
+test('`css` does not tag at-rule conditions as selectors', () => {
+  const tokens = tokenize('language-css', '@media (hover:hover) { a { color: red; } }');
+  assert.deepEqual(tokens.filter((t) => t.type === 'selector').map((t) => t.text), ['a']);
+});
+
+test('`css` tokenizes long inputs in linear time', () => {
+  const inputs = [
+    Array.from({ length: 20000 }, (_, i) => `.s${i}`).join(', ') + ' { color: red; }',
+    'word.Next '.repeat(20000),
+    'a' + ':b'.repeat(40) + ' x',
+    'a' + '.b'.repeat(20000)
+  ];
+  for (const text of inputs) {
+    const start = performance.now();
+    tokenize('language-css', text);
+    assert.ok(performance.now() - start < 1000, `took too long for ${JSON.stringify(text.slice(0, 20))}…`);
+  }
+});
+
+test('`css` tags a percentage, unit included, as a number', () => {
+  const tokens = tokenize('language-css', 'a { width: 50%; }');
+  assertHasToken(tokens, 'number', '50%');
 });
 
 test('`javascript`', () => {
-  // `console.log(…)` rather than a bare builtin call like `fetch(…)`: When a
-  // builtin is called directly, `function`’s pattern (listed first) and
-  // `builtin`’s pattern match the identical span, and `function` wins by
-  // pattern order—so `builtin` only surfaces for non-called references like
-  // `console` here
   const tokens = tokenize('language-javascript', 'const x = console.log(1); // c');
   assertHasToken(tokens, 'keyword', 'const');
   assertHasToken(tokens, 'builtin', 'console');
   assertHasToken(tokens, 'function', 'log');
   assertHasToken(tokens, 'comment', '// c');
+});
+
+test('`javascript` tags a called builtin as `builtin`, not `function`', () => {
+  const tokens = tokenize('language-javascript', 'fetch(url); parseInt(x); f(1);');
+  assertHasToken(tokens, 'builtin', 'fetch');
+  assertHasToken(tokens, 'builtin', 'parseInt');
+  assertHasToken(tokens, 'function', 'f');
+});
+
+test('`javascript` and `typescript` tag `=>` as a single operator', () => {
+  for (const className of ['language-javascript', 'language-typescript']) {
+    assertHasToken(tokenize(className, 'const f = (a) => a;'), 'operator', '=>');
+  }
 });
 
 test('`js` is an alias for `javascript`', () => {
@@ -127,6 +173,12 @@ test('`php`', () => {
   assertHasToken(tokens, 'comment', '// c');
 });
 
+test('`php` tags `->` and `=>` as single operators', () => {
+  const tokens = tokenize('language-php', '$a->b(); $x = [1 => 2];');
+  assertHasToken(tokens, 'operator', '->');
+  assertHasToken(tokens, 'operator', '=>');
+});
+
 test('`python`', () => {
   const tokens = tokenize('language-python', "def f():\n    return fr'a\\d'  # c");
   assertHasToken(tokens, 'keyword', 'def');
@@ -138,6 +190,11 @@ test('`python` multi-letter and prefixed triple-quoted string prefixes', () => {
   const tokens = tokenize('language-python', 'x = rf"a"\ny = f"""b"""');
   assertHasToken(tokens, 'string', 'rf"a"');
   assertHasToken(tokens, 'string', 'f"""b"""');
+});
+
+test('`python` tags the return annotation arrow `->` as a single operator', () => {
+  const tokens = tokenize('language-python', 'def f(a) -> int:\n    return a');
+  assertHasToken(tokens, 'operator', '->');
 });
 
 test('`py` is an alias for `python`', () => {
@@ -334,4 +391,37 @@ test('`apacheconf` tags mod_expires periods as numbers, but not digits inside id
   assert.ok(!tokens.some((t) => t.type === 'number' && t.text === '8'));
   // The `404` of `/404.html` is part of a filename
   assert.equal(tokens.filter((t) => t.type === 'number' && t.text === '404').length, 1);
+});
+test('Every token type has a `::highlight()` rule and a custom property in both palettes', () => {
+  const css = readFileSync(`${dirRoot}/syntaxp.css`, 'utf8');
+  const [light, dark] = css.split('@media');
+  const types = new Set([...jsSource.matchAll(/\btype: '(\w+)'/g)].map((match) => match[1]));
+  for (const type of types) {
+    assert.match(css, new RegExp(`::highlight\\(${type}\\)\\s*\\{\\s*color: var\\(--s5p-${type}\\);`), `no rule for ${type}`);
+    assert.match(light, new RegExp(`--s5p-${type}:`), `no light color for ${type}`);
+    assert.match(dark, new RegExp(`--s5p-${type}:`), `no dark color for ${type}`);
+  }
+});
+
+test('Every language tokenizes adversarial input in linear time', () => {
+  const languages = ['html', 'markdown', 'css', 'javascript', 'typescript', 'python', 'php', 'shell', 'json', 'yaml', 'sql', 'nunjucks', 'diff', 'http', 'apacheconf'];
+  for (const unit of ['\n', ' \n', '  ', '[', '](', '{%']) {
+    const text = unit.repeat(80000 / unit.length);
+    for (const language of languages) {
+      const start = performance.now();
+      tokenize(`language-${language}`, text);
+      assert.ok(performance.now() - start < 1000, `${language} took too long for ${JSON.stringify(unit)}`);
+    }
+  }
+});
+
+test('Highlights a block with more ranges than fit in a call’s arguments', () => {
+  assert.doesNotThrow(() => tokenize('language-css', '{'.repeat(300000)));
+});
+
+test('Ignores a `language-*` class naming an inherited object property', () => {
+  const codeSamples = ['constructor', '__proto__', 'toString'].map((name) => ({ className: `language-${name}`, text: 'x' }));
+  codeSamples.push({ className: 'language-js', text: 'const a = 1;' });
+  const { highlightsByType } = runSyntaxp(jsSource, { codeSamples });
+  assert.ok(highlightsByType.has('keyword'));
 });

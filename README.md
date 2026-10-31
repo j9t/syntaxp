@@ -116,9 +116,13 @@ Do you miss an important language or alias? Contributions are welcome!
 | `operator` | `===`, `=>`, `&&` |
 | `tag` | `<div>`, `</span>` |
 | `attribute` | `class=`, `href=` |
+| `punctuation` | `{`, `;`, `>` |
 | `property` | `color:`, `margin:` |
 | `selector` | `.container`, `#app` |
 | `builtin` | `console`, `Promise`, `Math` |
+| `type` | `string`, `Record` (TypeScript) |
+| `doctype` | `<!DOCTYPE html>` |
+| `entity` | `&amp;`, `&#169;` |
 | `variable` | `$HOME`, `${name}` |
 | `command` | `npm`, `git`, `ssh` |
 | `flag` | `--port`, `-v` |

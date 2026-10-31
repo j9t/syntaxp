@@ -222,3 +222,16 @@ function assertHasOne(tokens, type, text) {
   const matches = tokens.filter((t) => t.type === type && t.text === text);
   assert.equal(matches.length, 1, `expected exactly one ${type} token ${JSON.stringify(text)}, got ${matches.length}`);
 }
+
+test('`detectLanguage` does not mistake a JS condition with index access (`list[i].active) {`) for a CSS type selector', () => {
+  const { window } = runSyntaxp(jsSource);
+  for (const source of ['} else if (list[i].active) {\n  go()\n}', 'if (rows[n].cells[m].hidden) { show() }']) {
+    assert.notEqual(window.syntaxp.detectLanguage(source), 'css');
+  }
+});
+
+test('`detectLanguage` recognizes type selectors with attribute and functional pseudo-class compounds', () => {
+  const { window } = runSyntaxp(jsSource);
+  assert.equal(window.syntaxp.detectLanguage('input[type="text"] {\n  border: 0;\n}'), 'css');
+  assert.equal(window.syntaxp.detectLanguage('li:nth-child(2n) {\n  color: red;\n}'), 'css');
+});

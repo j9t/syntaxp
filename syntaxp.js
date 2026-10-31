@@ -83,7 +83,9 @@
     document.head.appendChild(style);
   }
 
-  // Token patterns per language
+  // Token patterns per language; a lookbehind that opens a pattern gets a
+  // lookahead for the token’s first character in front of it, so it doesn’t
+  // rescan whitespace at every position (quadratic in older V8)
   const languages = {
 
     html: [
@@ -230,7 +232,7 @@
       // after `|`—no fixed filter list is kept here since templates commonly
       // add their own—while a called macro/function still needs the usual
       // name-before-`(` pattern
-      { type: 'function', regex: /(?<=\|\s*)[a-zA-Z_][a-zA-Z0-9_]*|\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
+      { type: 'function', regex: /(?=[a-zA-Z_])(?<=\|\s*)[a-zA-Z_][a-zA-Z0-9_]*|\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/g },
       // `=` is included alongside the comparison/arithmetic operators above
       // for assignment (`{% set x = 1 %}`)—`={2,3}` is tried first in the
       // alternation, so a real `==`/`===` still matches whole, never as two
@@ -270,7 +272,7 @@
       // hundreds of them and each module adds its own, so any list here would
       // leave real configuration half-styled. Detection stays conservative
       // regardless—see `APACHE_DIRECTIVES`
-      { type: 'keyword', regex: /(?<=^[ \t]*)[A-Za-z][A-Za-z0-9_]*(?=[ \t]|$)/gm },
+      { type: 'keyword', regex: /(?=[A-Za-z])(?<=^[ \t]*)[A-Za-z][A-Za-z0-9_]*(?=[ \t]|$)/gm },
       // Only as a standalone value, so an `on`/`off` inside a path or
       // pattern (e.g., `/errors/on.html`) stays plain
       { type: 'builtin', regex: /(?<=[ \t])(?:on|off)(?=[ \t]|$)/gim },

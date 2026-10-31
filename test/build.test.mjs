@@ -31,11 +31,11 @@ after(() => {
   rmSync(dirDist, { recursive: true, force: true });
 });
 
-test('build script exits cleanly', () => {
+test('Exits cleanly', () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
-test('dist contains exactly the five expected files', () => {
+test('Writes exactly the five expected files to dist', () => {
   const files = readdirSync(dirDist).sort();
   assert.deepEqual(files, [
     'syntaxp.js',
@@ -46,7 +46,7 @@ test('dist contains exactly the five expected files', () => {
   ]);
 });
 
-test('placeholder is fully resolved in both JS builds', () => {
+test('Fully resolves the placeholder in both JS builds', () => {
   for (const name of ['syntaxp.js', 'syntaxp.min.js']) {
     const content = readFileSync(`${dirDist}/${name}`, 'utf8');
     assert.ok(
@@ -56,20 +56,20 @@ test('placeholder is fully resolved in both JS builds', () => {
   }
 });
 
-test('real CSS landed in both JS builds', () => {
+test('Embeds real CSS in both JS builds', () => {
   for (const name of ['syntaxp.js', 'syntaxp.min.js']) {
     const content = readFileSync(`${dirDist}/${name}`, 'utf8');
     assert.match(content, /::highlight\(keyword\)/, `${name} is missing embedded CSS`);
   }
 });
 
-test('min.js is meaningfully smaller than the unminified build', () => {
+test('Makes min.js meaningfully smaller than the unminified build', () => {
   const unminified = readFileSync(`${dirDist}/syntaxp.js`, 'utf8');
   const minified = readFileSync(`${dirDist}/syntaxp.min.js`, 'utf8');
   assert.ok(minified.length < unminified.length * 0.8, 'min.js is not meaningfully smaller');
 });
 
-test('both dist files carry the version banner', () => {
+test('Adds the version banner to both dist files', () => {
   const banner = `/*! syntaxp ${version}, https://github.com/j9t/syntaxp */`;
   for (const name of ['syntaxp.js', 'syntaxp.min.js']) {
     const content = readFileSync(`${dirDist}/${name}`, 'utf8');
@@ -77,7 +77,7 @@ test('both dist files carry the version banner', () => {
   }
 });
 
-test('published syntaxp.min.js.hash exactly matches the hash of what actually gets injected at runtime', () => {
+test('Publishes a syntaxp.min.js.hash that exactly matches the hash of what actually gets injected at runtime', () => {
   const jsSource = readFileSync(`${dirDist}/syntaxp.min.js`, 'utf8');
   const { styleElements } = runSyntaxp(jsSource);
   const injectedCss = styleElements[0].textContent;
@@ -86,7 +86,7 @@ test('published syntaxp.min.js.hash exactly matches the hash of what actually ge
   assert.equal(published, expected, 'syntaxp.min.js.hash does not match the injected style’s actual hash');
 });
 
-test('published .light.hash/.dark.hash exactly match what actually gets injected under each theme override', () => {
+test('Publishes .light.hash/.dark.hash files that exactly match what actually gets injected under each theme override', () => {
   const jsSource = readFileSync(`${dirDist}/syntaxp.min.js`, 'utf8');
   for (const theme of ['light', 'dark']) {
     const { styleElements } = runSyntaxp(jsSource, { theme });

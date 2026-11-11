@@ -139,7 +139,7 @@ Unsupported browsers show plain uncolored code (graceful fallback, no errors).
 `syntaxp.css` and `syntaxp.js` are the source of truth and have no build step of their own—the tooling below only produces version-stamped release files in `dist/`, and is a dev-time dependency only. Run `npm install` once to fetch it and set up a pre-commit hook that runs the contrast check whenever `syntaxp.css` is staged.
 
 * `npm run check-contrast`: Check every token color against its palette’s `--s5p-background` (also runs automatically before each commit that touches `syntaxp.css`)
-* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus three `.hash` files for `syntaxp.min.js` (default, `data-theme=light`, `data-theme=dark`) containing their `style-src` hash-sources (see [note on Content Security Policies](#content-security-policy-management))
+* `npm run build`: Produce `dist/syntaxp.js` and `dist/syntaxp.min.js`, each with `syntaxp.css`’s content embedded (unminified and minified, respectively), plus three `.hash` files for `syntaxp.min.js` (default, `data-theme=light`, `data-theme=dark`) containing their `style-src` hash-sources (cf. [CSP management](#content-security-policy-management))
 * `npm test`: Run the test suite
 
 ### Releasing
